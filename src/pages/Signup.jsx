@@ -19,7 +19,7 @@ import AuthLayout from '../components/auth/AuthLayout'
 import AuthCard from '../components/auth/AuthCard'
 import BrandSection from '../components/auth/BrandSection'
 
-const { Title, Text, Link } = Typography
+const { Title, Text } = Typography
 
 const Signup = () => {
   const [showPasskey, setShowPasskey] = useState(false)
