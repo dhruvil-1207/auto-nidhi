@@ -14,6 +14,8 @@ import {
   UserAddOutlined,
 } from '@ant-design/icons'
 
+import { Link } from 'react-router-dom'
+
 import AuthLayout from '../components/auth/AuthLayout'
 import AuthCard from '../components/auth/AuthCard'
 import BrandSection from '../components/auth/BrandSection'
@@ -21,6 +23,7 @@ import BrandSection from '../components/auth/BrandSection'
 const { Title, Text } = Typography
 
 const Signup = () => {
+
   const [showPasskey, setShowPasskey] = useState(false)
 
   const restrictedRoles = [
@@ -73,7 +76,10 @@ const Signup = () => {
           Start managing operations smarter
         </Text>
 
-        <Form layout="vertical" onFinish={handleSignup}>
+        <Form
+          layout="vertical"
+          onFinish={handleSignup}
+        >
 
           <Form.Item
             label="Email"
@@ -163,4 +169,4 @@ const Signup = () => {
   )
 }
 
-export default Signup
+export default Signup;
