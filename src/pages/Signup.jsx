@@ -1,30 +1,36 @@
 import React, { useState } from 'react'
+
 import {
   Form,
   Input,
   Select,
   Button,
   Typography,
-  Card,
   message,
+  Card,
 } from 'antd'
 
 import {
-  CarOutlined,
   UserAddOutlined,
 } from '@ant-design/icons'
 
-import './Signup.css'
+import AuthLayout from '../components/auth/AuthLayout'
+import AuthCard from '../components/auth/AuthCard'
+import BrandSection from '../components/auth/BrandSection'
 
 const { Title, Text, Link } = Typography
 
 const Signup = () => {
   const [showPasskey, setShowPasskey] = useState(false)
 
-  const restrictedRoles = ['admin', 'accountant', 'data_entry']
+  const restrictedRoles = [
+    'admin',
+    'accountant',
+    'data_entry',
+  ]
 
   // ✅ API CALL
-  const onFinish = async (values) => {
+  const handleSignup = async (values) => {
     try {
       const res = await fetch("http://127.0.0.1:8000/api/signup", {
         method: "POST",
@@ -50,38 +56,38 @@ const Signup = () => {
   }
 
   return (
-    <div className="signup-container">
-      <Card className="signup-card">
+    <AuthLayout leftContent={<BrandSection />}>
+      <AuthCard>
 
-        <div className="signup-header">
-          <CarOutlined className="logo" />
+        <Title level={2} className="auth-title">
+          Create Account
+        </Title>
 
-          <Title level={2} className="title">
-            Auto-Nidhi
-          </Title>
+        <Text className="auth-subtitle">
+          Start managing operations smarter
+        </Text>
 
-          <Text className="subtitle">
-            Create your account
-          </Text>
-        </div>
-
-        {/* ✅ CONNECTED FORM */}
-        <Form layout="vertical" onFinish={onFinish}>
+        {/* ✅ FORM (ONLY ONE FORM — FIXED) */}
+        <Form layout="vertical" onFinish={handleSignup}>
 
           <Form.Item
-            label="Email address"
+            label="Email"
             name="email"
-            rules={[{ required: true, message: "Email is required" }]}
+            rules={[
+              { required: true, message: 'Please enter your email' }
+            ]}
           >
-            <Input size="large" placeholder="you@example.com" />
+            <Input placeholder="you@example.com" />
           </Form.Item>
 
           <Form.Item
             label="Password"
             name="password"
-            rules={[{ required: true, message: "Password is required" }]}
+            rules={[
+              { required: true, message: 'Please enter your password' }
+            ]}
           >
-            <Input.Password size="large" placeholder="Min. 8 characters" />
+            <Input.Password placeholder="Enter password" />
           </Form.Item>
 
           <Form.Item
@@ -100,17 +106,18 @@ const Signup = () => {
               }),
             ]}
           >
-            <Input.Password size="large" placeholder="Confirm your password" />
+            <Input.Password placeholder="Confirm password" />
           </Form.Item>
 
           <Form.Item
             label="Role"
             name="role"
-            rules={[{ required: true, message: "Role is required" }]}
+            rules={[
+              { required: true, message: 'Please select role' }
+            ]}
           >
             <Select
-              size="large"
-              placeholder="Select your role"
+              placeholder="Select role"
               onChange={(value) =>
                 setShowPasskey(restrictedRoles.includes(value))
               }
@@ -124,38 +131,35 @@ const Signup = () => {
 
           {showPasskey && (
             <Form.Item
-              label="Passkey"
+              label="Role Passkey"
               name="passkey"
-              rules={[{ required: true, message: "Passkey required for this role" }]}
+              rules={[
+                { required: true, message: 'Passkey required for this role' }
+              ]}
             >
-              <Input.Password size="large" placeholder="Enter role passkey" />
+              <Input.Password placeholder="Enter role passkey" />
             </Form.Item>
           )}
 
           <Button
-            block
-            size="large"
-            htmlType="submit"
-            icon={<UserAddOutlined />}
-            className="signup-btn"
             type="primary"
+            block
+            icon={<UserAddOutlined />}
+            htmlType="submit"
+            className="auth-btn"
           >
-            Create account
+            Create Account
           </Button>
 
         </Form>
 
-        <div className="footer">
-          <Text>or</Text>
-
-          <div>
-            <Text>Already have an account? </Text>
-            <Link href="/login">Sign in</Link>
-          </div>
+        <div className="auth-footer">
+          <Text>Already have an account? </Text>
+          <Link href="/login">Sign in</Link>
         </div>
 
-      </Card>
-    </div>
+      </AuthCard>
+    </AuthLayout>
   )
 }
 
