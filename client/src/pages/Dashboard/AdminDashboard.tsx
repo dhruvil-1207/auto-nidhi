@@ -157,7 +157,7 @@ export default function AdminDashboard() {
               background: 'linear-gradient(135deg, var(--brand-600), var(--brand-800))',
               color: '#fff', border: 'none', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 4px 10px rgba(37,99,235,.2)'
-            }}>
+            }} onClick={() => navigate('/files/new')}>
               <Plus size={16} /> New Application
             </button>
             {/* -------------------------------- */}
