@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 <<<<<<< HEAD
 
@@ -51,6 +51,8 @@ def login(data: LoginData, db: Session = Depends(get_db)):
     return {
         "message": "Login successful", 
         "user": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
         "role_id": str(user.role_id)
     }
 >>>>>>> 004db5aff0611d05f154f33fd620d098b25c45d7
