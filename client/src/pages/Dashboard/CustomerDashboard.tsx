@@ -31,7 +31,7 @@ export default function CustomerDashboard() {
       <header style={{
         background: 'var(--surface-0)', borderBottom: '1px solid var(--gray-100)',
         padding: '0 40px', height: 70, display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', sticky: 'top', zIndex: 100, boxShadow: 'var(--shadow-sm)'
+        justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, boxShadow: 'var(--shadow-sm)'
       }}>
         {/* Logo Branding */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

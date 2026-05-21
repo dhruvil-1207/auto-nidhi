@@ -6,8 +6,8 @@ import Signup from './pages/Signup'
 // Import your new Router and the new Applications page
 import RoleBasedRouter from './pages/RoleBasedRouter' // Make sure path is correct!
 import Applications from './pages/Applications' 
-import NewApplication from './pages/NewApplication'
 import CustomerDashboard from './pages/Dashboard/CustomerDashboard'
+import Loans from './pages/Loans'
 
 function App() {
   return (
@@ -25,7 +25,7 @@ function App() {
         {/* --- NEW ROUTE --- */}
         {/* When the user clicks Applications in the sidebar, it opens this page */}
         <Route path="/files"     element={<Applications />} />
-        <Route path="/files/new" element={<NewApplication />} />
+        <Route path="/loans"     element={<Loans />} />
         
       </Routes>
     </BrowserRouter>

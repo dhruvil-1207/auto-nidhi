@@ -20,11 +20,11 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false) // Added loading state
 
   // ✅ Backend API-based LOGIN
+// ✅ Backend API-based LOGIN
   const handleLogin = async (values: LoginFormValues) => {
     try {
       setLoading(true)
 
-      // 1. Send the email and password to your FastAPI backend
       const response = await fetch("http://localhost:8000/api/login", {
         method: "POST",
         headers: {
@@ -36,17 +36,14 @@ const Login: React.FC = () => {
         }),
       })
 
-      // 2. Read the response from Python
       const data = await response.json()
 
-      // 3. Handle errors (e.g., wrong password or email doesn't exist)
       if (!response.ok || data.error) {
         message.error(data.error || 'Invalid email or password.')
         setLoading(false)
         return
       }
 
-      // 4. Success! Save the user session locally so React knows they are logged in
       localStorage.setItem(
         'an_current_user',
         JSON.stringify({ 
@@ -56,16 +53,17 @@ const Login: React.FC = () => {
         })
       )
       
-      // Store the exact role string (e.g. 'admin') for RoleBasedRouter
       localStorage.setItem('user_role', data.role)
-      
-      // Store the token (or a placeholder one until you fully implement JWTs)
       localStorage.setItem('access_token', data.access_token || 'local-dev-token')
       
       message.success('Login successful! Welcome back.')
       
-      // 5. Redirect them to the main dashboard
-      navigate('/dashboard')
+      // 5. Dynamic Redirect based on exact role matching configuration
+      if (data.role === 'customer') {
+        navigate('/customer')
+      } else {
+        navigate('/dashboard')
+      }
 
     } catch (err) {
       console.error("Backend connection error:", err)

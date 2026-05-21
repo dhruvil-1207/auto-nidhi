@@ -34,7 +34,7 @@ const Signup: React.FC = () => {
   const [showPasskey, setShowPasskey] = useState(false)
   const [loading, setLoading] = useState(false) // Added a loading state for the button
 
-  // ✅ Backend API-based SIGNUP
+// ✅ Backend API-based SIGNUP
   const handleSignup = async (values: SignupFormValues) => {
     try {
       setLoading(true)
@@ -92,7 +92,13 @@ const Signup: React.FC = () => {
       localStorage.setItem('access_token', data.access_token || 'local-dev-token')
 
       message.success('Account created successfully! Welcome.')
-      navigate('/dashboard')
+      
+      // 7. Dynamic redirect based on backend evaluation role
+      if (data.role === 'customer') {
+        navigate('/customer')
+      } else {
+        navigate('/dashboard')
+      }
       
     } catch (err) {
       console.error("Backend connection error:", err)
