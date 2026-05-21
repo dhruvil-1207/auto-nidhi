@@ -17,14 +17,12 @@ interface LoginFormValues {
 
 const Login: React.FC = () => {
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false) // Added loading state
+  const [loading, setLoading] = useState(false)
 
-  // ✅ Backend API-based LOGIN
   const handleLogin = async (values: LoginFormValues) => {
     try {
       setLoading(true)
 
-      // 1. Send the email and password to your FastAPI backend
       const response = await fetch("http://localhost:8000/api/login", {
         method: "POST",
         headers: {
@@ -36,33 +34,33 @@ const Login: React.FC = () => {
         }),
       })
 
-      // 2. Read the response from Python
       const data = await response.json()
 
-      // 3. Handle errors (e.g., wrong password or email doesn't exist)
       if (!response.ok || data.error) {
         message.error(data.error || 'Invalid email or password.')
         setLoading(false)
         return
       }
 
-      // 4. Success! Save the user session locally so React knows they are logged in
       localStorage.setItem(
         'an_current_user',
         JSON.stringify({ 
           email: data.user, 
-          role: data.role_id, 
+          role: data.role, 
           name: data.first_name || 'User' 
         })
       )
       
-      // Store the token (or a placeholder one until you fully implement JWTs)
+      localStorage.setItem('user_role', data.role)
       localStorage.setItem('access_token', data.access_token || 'local-dev-token')
       
       message.success('Login successful! Welcome back.')
       
-      // 5. Redirect them to the main dashboard
-      navigate('/dashboard')
+      if (data.role === 'customer') {
+        navigate('/customer')
+      } else {
+        navigate('/dashboard')
+      }
 
     } catch (err) {
       console.error("Backend connection error:", err)
@@ -83,7 +81,6 @@ const Login: React.FC = () => {
           Login to continue to Auto-Nidhi
         </Text>
 
-        {/* ✅ FORM */}
         <Form layout="vertical" onFinish={handleLogin}>
           <Form.Item
             label="Email"
@@ -91,6 +88,7 @@ const Login: React.FC = () => {
             rules={[
               { required: true, message: 'Please enter email' },
               { type: 'email', message: 'Please enter a valid email' },
+              { pattern: /^[a-zA-Z0-9._%+-]+@gmail\.com$/, message: 'Only @gmail.com emails are allowed' }
             ]}
           >
             <Input placeholder="you@example.com" />
@@ -128,7 +126,7 @@ const Login: React.FC = () => {
             icon={<LoginOutlined />}
             block
             className="auth-btn"
-            loading={loading} // Binds the spinner to the API call
+            loading={loading}
           >
             Login
           </Button>
