@@ -1,10 +1,14 @@
 ﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# Auth Routes
 from backend.routes.signup import router as signup_router
 from backend.routes.login import router as login_router
-from backend.routes.home import router as home_router
-from backend.routes.applications import router as applications_router
+
+# Admin Routes
+from backend.routes.admin.dashboard import router as dashboard_router
+from backend.routes.admin.customers import router as customers_router
+from backend.routes.admin.files import router as files_router
 
 app = FastAPI(title="AutoNidhi API", version="1.0.0")
 
@@ -24,8 +28,13 @@ def home():
 def test():
     return {"status": "success", "message": "API working"}
 
-# Register routers
+# ================= Register Routers =================
+
+# Auth
 app.include_router(signup_router, prefix="/api")
 app.include_router(login_router, prefix="/api")
-app.include_router(home_router, prefix="/api")
-app.include_router(applications_router, prefix="/api")
+
+# Admin Dashboard & Data
+app.include_router(dashboard_router)
+app.include_router(customers_router)
+app.include_router(files_router)
