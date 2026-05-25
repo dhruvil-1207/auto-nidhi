@@ -15,10 +15,11 @@ interface Props<T extends Record<string, any>> {
   addLabel?: string
   rightSlot?: ReactNode
   empty?: string
+  loading?: boolean
 }
 
 export default function DataTable<T extends Record<string, any>>({
-  columns, rows, searchKeys, onAdd, addLabel = 'Add new', rightSlot, empty = 'No records',
+  columns, rows, searchKeys, onAdd, addLabel = 'Add new', rightSlot, empty = 'No records', loading = false,
 }: Props<T>) {
   const [q, setQ] = useState('')
   const filtered = useMemo(() => {
@@ -45,7 +46,9 @@ export default function DataTable<T extends Record<string, any>>({
           )}
         </div>
       </div>
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="data-empty">Loading...</div>
+      ) : filtered.length === 0 ? (
         <div className="data-empty">{empty}</div>
       ) : (
         <table className="data-table">
