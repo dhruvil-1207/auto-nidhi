@@ -180,7 +180,6 @@ class RTOPayment(Base):
     payee_dealer = relationship("MasterDealer", foreign_keys=[payee_dealer_id])
     payee_broker = relationship("MasterBroker", foreign_keys=[payee_broker_id])
 
-
 class CommissionIn(Base):
     __tablename__ = "commission_in"
 
