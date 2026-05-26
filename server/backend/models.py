@@ -86,6 +86,11 @@ class MasterBroker(Base):
     __tablename__ = "master_broker"
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"))
     broker_name = Column(String(255), nullable=False)
+    area = Column(String(100))
+    district = Column(String(100))
+    phone = Column(String(15), unique=True)
+    is_deleted = Column(Boolean, nullable=False, default=False)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
 
 class FileRecord(Base):
     __tablename__ = "file_record"
