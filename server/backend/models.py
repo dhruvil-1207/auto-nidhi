@@ -219,3 +219,24 @@ class CommissionOut(Base):
     file = relationship("FileRecord")
     payee_dealer = relationship("MasterDealer", foreign_keys=[payee_dealer_id])
     payee_broker = relationship("MasterBroker", foreign_keys=[payee_broker_id])
+
+class ExpenseLedger(Base):
+    __tablename__ = "expense_ledger"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"))
+    amount = Column(Numeric(15,2))
+    expense_date = Column(Date)
+    remarks = Column(String)
+
+    expense_category_id = Column(UUID(as_uuid=True), ForeignKey("master_expense_category.id"))
+    file_id = Column(UUID(as_uuid=True), ForeignKey("file_record.id"))
+    created_by = Column(UUID(as_uuid=True), ForeignKey("system_user.id"))
+
+    created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
+    is_deleted = Column(Boolean, default=False)
+
+class MasterExpenseCategory(Base):
+    __tablename__ = "master_expense_category"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"))
+    expense_name = Column(String(255), nullable=False)
