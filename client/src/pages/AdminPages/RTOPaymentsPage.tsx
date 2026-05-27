@@ -223,7 +223,7 @@ export default function RTOPaymentsPage() {
   const fetchDealers = async () => {
     try {
       const res = await dealersApi.list()
-      setDealersList(res.data || [])
+      setDealersList(Array.isArray(res) ? res : (res.data || []))
     } catch (err) {
       console.error('Failed to fetch dealers:', err)
     }
