@@ -4,6 +4,7 @@ import {
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RotateCcw, AlertTriangle
 } from 'lucide-react'
 import { message } from 'antd' 
+import type { InsurancePayment } from '../../lib/finance'
 // 👇 Import insuranceCompaniesApi
 import { insurancePaymentsApi, filesApi, bankAccountsApi, insuranceCompaniesApi } from '../../api/services'
 import PageHeader from '../../components/app/PageHeader'
