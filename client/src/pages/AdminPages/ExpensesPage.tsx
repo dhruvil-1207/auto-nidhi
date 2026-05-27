@@ -24,6 +24,14 @@ interface ExpenseCategory {
   name: string
 }
 
+const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+const formatExpenseId = (id: string) => {
+  if (!id) return ''
+  if (uuidRe.test(id)) return `EXPENSE-${id.slice(0, 8)}`
+  return id
+}
+
 const emptyForm = (defaultCategory = ''): Omit<Expense, 'id' | 'created_at'> => ({
   amount: 0,
   expense_date: '',
@@ -405,7 +413,7 @@ export default function ExpensesPage() {
                       style={{ cursor: 'default', background: 'transparent', borderLeft: '3px solid transparent', transition: 'background .15s' }}
                       onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--surface-1)' }}
                       onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'transparent' }}>
-                      <td style={{ padding: '12px 14px', color: 'var(--brand-700)', fontWeight: 600, fontSize: '.82rem' }}>{row.id}</td>
+                      <td title={row.id} style={{ padding: '12px 14px', color: 'var(--brand-700)', fontWeight: 600, fontSize: '.82rem', fontFamily: 'monospace' }}>{formatExpenseId(row.id)}</td>
                       <td style={{ padding: '12px 14px' }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 'var(--radius-full)', fontSize: '.75rem', fontWeight: 600, background: cc.bg, color: cc.color }}>
                           <Tag size={10} />{row.expense_category_name}
@@ -437,7 +445,7 @@ export default function ExpensesPage() {
         <div className="modal-backdrop" onClick={closeView}>
           <div className="modal" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Expense - {selected.id}</h3>
+              <h3>Expense - {formatExpenseId(selected.id)}</h3>
               <button className="btn btn-ghost btn-sm" onClick={closeView}><X size={16} /></button>
             </div>
             <div className="modal-body">
@@ -467,7 +475,7 @@ export default function ExpensesPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                <DetailRow icon={<Hash size={14} />} label="Expense ID" value={selected.id} />
+                <DetailRow icon={<Hash size={14} />} label="Expense ID" value={formatExpenseId(selected.id)} />
                 <DetailRow icon={<Tag size={14} />} label="Category" value={selected.expense_category_name} />
                 <DetailRow icon={<Banknote size={14} />} label="Amount" value={`₹${selected.amount.toLocaleString('en-IN')}`} />
                 <DetailRow icon={<Calendar size={14} />} label="Expense Date" value={selected.expense_date} />
@@ -506,7 +514,7 @@ export default function ExpensesPage() {
         </div>
       </Modal>
 
-      <Modal open={editOpen} title={`Edit Expense - ${selected?.id}`} onClose={() => setEditOpen(false)} onSubmit={handleEdit} submitLabel="Save Changes">
+      <Modal open={editOpen} title={`Edit Expense - ${selected ? formatExpenseId(selected.id) : ''}`} onClose={() => setEditOpen(false)} onSubmit={handleEdit} submitLabel="Save Changes">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <FormField label="Category">

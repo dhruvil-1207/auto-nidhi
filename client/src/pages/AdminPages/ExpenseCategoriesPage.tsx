@@ -10,6 +10,14 @@ interface ExpenseCategory {
   name: string
 }
 
+const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+const formatCategoryId = (id: string) => {
+  if (!id) return ''
+  if (uuidRe.test(id)) return `CATEGORY-${id.slice(0, 8)}`
+  return id
+}
+
 export default function ExpenseCategoriesPage() {
   const [categories, setCategories] = useState<ExpenseCategory[]>([])
   const [loading, setLoading] = useState(false)
@@ -147,8 +155,8 @@ export default function ExpenseCategoriesPage() {
             key: 'id',
             label: 'ID',
             render: (row) => (
-              <span style={{ fontWeight: 600, color: 'var(--brand-700)', fontFamily: 'monospace' }}>
-                {row.id}
+              <span title={row.id} style={{ fontWeight: 600, color: 'var(--brand-700)', fontFamily: 'monospace' }}>
+                {formatCategoryId(row.id)}
               </span>
             )
           },
@@ -242,7 +250,7 @@ export default function ExpenseCategoriesPage() {
       {/* ── Edit Modal ── */}
       <Modal
         open={editOpen}
-        title={`Edit Expense Category — ${selectedCategory?.id}`}
+        title={`Edit Expense Category — ${selectedCategory ? formatCategoryId(selectedCategory.id) : ''}`}
         onClose={() => {
           setEditOpen(false)
           setSelectedCategory(null)
@@ -256,7 +264,7 @@ export default function ExpenseCategoriesPage() {
             <label className="form-label">Category ID (Read Only)</label>
             <input
               className="form-input"
-              value={selectedCategory?.id || ''}
+              value={selectedCategory ? formatCategoryId(selectedCategory.id) : ''}
               disabled
               style={{ backgroundColor: 'var(--surface-1)', color: 'var(--gray-500)', cursor: 'not-allowed' }}
             />

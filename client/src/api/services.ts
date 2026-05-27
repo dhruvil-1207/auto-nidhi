@@ -481,14 +481,14 @@ export const advancesApi = {
 
 export const expenseCategoriesApi = {
   list: async (search = '') => {
-    const { data } = await api.get('/expense-categories', {
+    const { data } = await api.get('/expense-categories/', {
       params: { search: search || undefined },
     })
     return data
   },
 
   create: async (payload: { name: string }) => {
-    const { data } = await api.post('/expense-categories', payload)
+    const { data } = await api.post('/expense-categories/', payload)
     return data
   },
 
