@@ -155,6 +155,7 @@ export default function AdvancesPage() {
   const [editOpen, setEditOpen] = useState(false)
   const [form,     setForm]     = useState(emptyForm())
   const [errors,   setErrors]   = useState<Record<string, string>>({})
+  const [formError, setFormError] = useState('')
 
   // Stats
   const totalAmount    = rows.reduce((s, r) => s + r.amount, 0)
@@ -227,6 +228,7 @@ export default function AdvancesPage() {
 
   // ── Handlers ──
   const handleAdd = async () => {
+    setFormError('')
     if (!validate(false)) return
 
     try {
@@ -245,8 +247,17 @@ export default function AdvancesPage() {
       setForm(emptyForm())
       setErrors({})
       setAddOpen(false)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create advance', err)
+      if (err.response?.status === 401) {
+        setFormError(err.response?.data?.detail || 'Your login session has expired. Please login again before adding an advance.')
+        return
+      }
+      if (err.response?.status === 403) {
+        setFormError('Only an admin user can add advances.')
+        return
+      }
+      setFormError(err.response?.data?.detail || 'Failed to create advance')
     }
   }
 
@@ -347,7 +358,7 @@ export default function AdvancesPage() {
               </div>
               <button
                 id="advance-add-btn"
-                onClick={() => { setForm(emptyForm()); setErrors({}); setAddOpen(true) }}
+                onClick={() => { setForm(emptyForm()); setErrors({}); setFormError(''); setAddOpen(true) }}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 'var(--radius-sm)', background: 'var(--brand-600)', color: '#fff', fontSize: '.85rem', fontWeight: 600, cursor: 'pointer', border: 'none', transition: 'background .15s' }}
                 onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-700)')}
                 onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-600)')}>
@@ -494,7 +505,8 @@ export default function AdvancesPage() {
       </div>
 
       {/* ── Add Modal ── */}
-      <Modal open={addOpen} title="Add Advance" onClose={() => { setAddOpen(false); setErrors({}) }} onSubmit={handleAdd} submitLabel="Add Advance" maxWidth="680px">
+      <Modal open={addOpen} title="Add Advance" onClose={() => { setAddOpen(false); setErrors({}); setFormError('') }} onSubmit={handleAdd} submitLabel="Add Advance" maxWidth="680px">
+        {formError && <div className="form-error" style={{ marginBottom: 12 }}>{formError}</div>}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {/* Party Type */}
           <FormField label="Party Type *">

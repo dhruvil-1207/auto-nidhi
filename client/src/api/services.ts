@@ -402,7 +402,9 @@ export const advancesApi = {
     purpose?: string
     remarks?: string
   }) => {
-    const { data } = await api.post('/advances', payload)
+    const { data } = await api.post('/advances/', payload, {
+      headers: { 'X-Skip-Auth-Redirect': 'true' },
+    })
     return data
   },
 
