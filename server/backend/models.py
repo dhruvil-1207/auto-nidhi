@@ -170,12 +170,14 @@ class MasterInsuranceCompany(Base):
     phone_no = Column(String(15))
     is_deleted = Column(Boolean, nullable=False, default=False)
     deleted_at = Column(DateTime(timezone=True), nullable=True)
+
 class MasterInsuranceType(Base):
     __tablename__ = "master_insurance_type"
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"))
     insurance_type_name = Column(String(255), nullable=False, unique=True)
     is_deleted = Column(Boolean, nullable=False, default=False)
     deleted_at = Column(DateTime(timezone=True), nullable=True)
+
 class PaymentIn(Base):
     __tablename__ = "payment_in"
     
