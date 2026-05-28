@@ -8,7 +8,7 @@ import {
   User, ChevronDown,
 } from 'lucide-react'
 import NotificationPanel from '../../components/app/NotificationPanel'
-import { subscribe, unreadCount } from '../../store/notificationStore'
+import { subscribe, unreadCount, fetchNotifications } from '../../store/notificationStore'
 import '../../pages.css'
 
 interface NavItem { to: string; label: string; icon: React.ComponentType<any> }
@@ -119,7 +119,13 @@ export default function AdminLayout() {
 
   // Subscribe to notification count changes
   useEffect(() => {
+    // 1. Fetch real data from the backend immediately when the layout mounts
+    fetchNotifications() 
+    
+    // 2. Set initial count (will update automatically via subscription once fetch finishes)
     setBadgeCount(unreadCount())
+    
+    // 3. Listen for changes
     const unsub = subscribe(() => setBadgeCount(unreadCount()))
     return unsub
   }, [])

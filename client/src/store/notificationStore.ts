@@ -1,98 +1,98 @@
-// ────────────────────────────────────────────────────────────────────────────
-// notificationStore.ts  –  Lightweight notification system for Admin/Staff
-// Persists to localStorage so notifications survive page navigation.
-// ────────────────────────────────────────────────────────────────────────────
+import { notificationsApi } from '../api/services'
 
-export type NotifType = 'added' | 'deleted' | 'updated' | 'info' | 'error'
+// 1. Match the exact PostgreSQL ENUM
+export type NotifType = 
+  | 'insurance_expiry'
+  | 'file_status_change'
+  | 'document_approved'
+  | 'document_rejected'
+  | 'payment_recorded'
+  | 'commission_credited'
+  | 'general'
 
 export interface Notification {
-  id:      string
-  type:    NotifType
+  id: string
+  type: NotifType
   message: string
-  page:    string       // e.g. "Payment IN"
-  time:    string       // ISO string
-  read:    boolean
+  time: string
+  read: boolean
+  page?: string
 }
 
-const STORAGE_KEY = 'an_notifications'
-const MAX_NOTIFS  = 50   // keep only latest 50
+let notifications: Notification[] = []
+let listeners: Array<() => void> = []
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function load(): Notification[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as Notification[]) : []
-  } catch {
-    return []
-  }
+export const subscribe = (listener: () => void) => {
+  listeners.push(listener)
+  return () => { listeners = listeners.filter((l) => l !== listener) }
 }
 
-function save(notifs: Notification[]) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notifs.slice(0, MAX_NOTIFS)))
-  } catch { /* ignore quota errors */ }
-}
+const notifyListeners = () => listeners.forEach((l) => l())
 
-// ── Listeners (so components can subscribe to changes) ─────────────────────
+export const getNotifications = () => notifications
 
-type Listener = () => void
-const listeners = new Set<Listener>()
+export const unreadCount = () => notifications.filter(n => !n.read).length
 
-function notify() {
-  listeners.forEach(fn => fn())
-}
-
-// ── Public API ────────────────────────────────────────────────────────────────
-
-/** Add a new notification and broadcast to all subscribers */
-export function addNotification(type: NotifType, message: string, page: string) {
-  const notifs = load()
+export const addNotification = (type: NotifType, message: string, page: string) => {
   const newNotif: Notification = {
-    id:      `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
     type,
     message,
+    time: new Date().toISOString(),
+    read: false,
     page,
-    time:    new Date().toISOString(),
-    read:    false,
   }
-  notifs.unshift(newNotif)
-  save(notifs)
-  notify()
+  notifications = [newNotif, ...notifications]
+  notifyListeners()
 }
 
-/** Get all notifications */
-export function getNotifications(): Notification[] {
-  return load()
+// Fetch from backend API
+export const fetchNotifications = async () => {
+  try {
+    const response = await notificationsApi.list()
+    // Map the backend structure to our frontend interface
+    notifications = response.data.map((n: any) => ({
+      id: n.id,
+      type: (n.type || 'general') as NotifType,
+      message: n.message,
+      time: n.created_at,
+      read: n.read,
+      page: n.file_id ? `File: ${n.file_id.substring(0, 8)}` : 'System'
+    }))
+    notifyListeners()
+  } catch (error) {
+    console.error("Failed to load notifications:", error)
+  }
 }
 
-/** Mark all as read */
-export function markAllRead() {
-  const notifs = load().map(n => ({ ...n, read: true }))
-  save(notifs)
-  notify()
+// Mark single notification as read
+export const markRead = async (id: string) => {
+  try {
+    // Optimistic UI update for instant feedback
+    notifications = notifications.map(n => n.id === id ? { ...n, read: true } : n)
+    notifyListeners()
+    // Background API call
+    await notificationsApi.markAsRead(id)
+  } catch (e) {
+    console.error(`Error marking notification ${id} as read`, e)
+    fetchNotifications() // Revert on failure
+  }
 }
 
-/** Mark a single notification as read */
-export function markRead(id: string) {
-  const notifs = load().map(n => n.id === id ? { ...n, read: true } : n)
-  save(notifs)
-  notify()
+// Mark all as read
+export const markAllRead = async () => {
+  try {
+    notifications = notifications.map(n => ({ ...n, read: true }))
+    notifyListeners()
+    await notificationsApi.markAllRead()
+  } catch (e) {
+    console.error("Error marking all as read", e)
+    fetchNotifications() // Revert on failure
+  }
 }
 
-/** Clear all notifications */
-export function clearAll() {
-  save([])
-  notify()
-}
-
-/** Count of unread notifications */
-export function unreadCount(): number {
-  return load().filter(n => !n.read).length
-}
-
-/** Subscribe to changes — returns unsubscribe function */
-export function subscribe(fn: Listener): () => void {
-  listeners.add(fn)
-  return () => listeners.delete(fn)
+// Clear all locally (Optional: if you want a backend clear, you'd add an endpoint for it)
+export const clearAll = () => {
+  notifications = []
+  notifyListeners()
 }
