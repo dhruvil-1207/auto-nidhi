@@ -526,3 +526,18 @@ export const adminSettingsApi = {
     return data
   },
 }
+
+export const notificationsApi = {
+  list: async () => {
+    const { data } = await api.get('/notifications/')
+    return data
+  },
+  markAsRead: async (id: string) => {
+    const { data } = await api.patch(`/notifications/${id}/read`)
+    return data
+  },
+  markAllRead: async () => {
+    const { data } = await api.patch('/notifications/mark-all-read')
+    return data
+  },
+}
