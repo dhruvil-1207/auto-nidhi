@@ -398,3 +398,18 @@ class UserNotificationPreference(Base):
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
 
     user = relationship("SystemUser", foreign_keys=[user_id])
+
+class Notification(Base):
+    __tablename__ = "notifications"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"))
+    user_id = Column(UUID(as_uuid=True), ForeignKey("system_user.id"), nullable=False)
+    notification_type = Column(String, nullable=False) # Maps to notification_type ENUM
+    message = Column(Text, nullable=False)
+    file_id = Column(UUID(as_uuid=True), ForeignKey("file_record.id"))
+    is_read = Column(Boolean, nullable=False, default=False)
+    read_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+
+    user = relationship("SystemUser", foreign_keys=[user_id])
+    file = relationship("FileRecord", foreign_keys=[file_id])
