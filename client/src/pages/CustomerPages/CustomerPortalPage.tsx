@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  FolderOpen, CheckCircle2, Clock, AlertCircle,
+  FolderOpen, Clock, AlertCircle,
   ArrowRight, Bell, FileText, Car, ShieldCheck,
-  ChevronRight, BellRing, Circle,
+  ChevronRight,
 } from 'lucide-react'
 import { filesApi } from '../../api/services'
 
@@ -16,14 +16,6 @@ interface FileRecord {
   status?: string
   finance_bank?: string
   created_at?: string
-}
-
-interface Notification {
-  id: string
-  message: string
-  time: string
-  read: boolean
-  type: 'info' | 'warning' | 'success'
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -59,20 +51,12 @@ function StatusBadge({ status }: { status?: string }) {
 
 const PIPELINE_STATUSES = ['draft', 'login', 'under_process', 'sanctioned', 'disbursed']
 
-// Mock notifications (replace with real API when available)
-const MOCK_NOTIFICATIONS: Notification[] = [
-  { id: '1', message: 'Your loan file is under review by the finance bank.', time: '2 hours ago', read: false, type: 'info' },
-  { id: '2', message: 'Documents approved — disbursement is now pending.', time: '1 day ago', read: false, type: 'success' },
-  { id: '3', message: 'Insurance renewal reminder: your policy expires in 15 days.', time: '3 days ago', read: true, type: 'warning' },
-]
-
 // ── Main ───────────────────────────────────────────────────────────────────
 
 export default function CustomerPortalPage() {
   const navigate = useNavigate()
   const [files, setFiles] = useState<FileRecord[]>([])
   const [loading, setLoading] = useState(true)
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS)
 
   // Read user from localStorage (DB fields: first_name, last_name, email, phone_number)
   const stored = (() => {
@@ -91,7 +75,7 @@ export default function CustomerPortalPage() {
   // Derived stats
   const active    = files.filter(f => !['completed', 'cancelled'].includes(normalizeStatus(f.status))).length
   const completed = files.filter(f => normalizeStatus(f.status) === 'completed').length
-  const unread    = notifications.filter(n => !n.read).length
+  const unread    = 0 // notifications count — see bell icon in topbar
 
   // Pipeline counts
   const pipeline = PIPELINE_STATUSES.map(key => ({
@@ -99,15 +83,6 @@ export default function CustomerPortalPage() {
     cfg: STATUS_CONFIG[key],
     count: files.filter(f => normalizeStatus(f.status) === key).length,
   }))
-
-  const markRead = (id: string) =>
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
-
-  const NOTIF_STYLE: Record<string, { bg: string; color: string }> = {
-    info:    { bg: '#eff6ff', color: '#1d4ed8' },
-    success: { bg: '#f0fdf4', color: '#15803d' },
-    warning: { bg: '#fef3c7', color: '#d97706' },
-  }
 
   return (
     <div className="db-root">
@@ -291,77 +266,30 @@ export default function CustomerPortalPage() {
           </table>
         </div>
 
-        {/* Notifications panel */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div className="db-card">
-            <div className="db-card-header">
-              <div className="db-card-title"><Bell size={16} /> Notifications</div>
-              <Link to="/portal/notifications" className="db-see-all">See all <ArrowRight size={12} /></Link>
-            </div>
-            <div>
-              {notifications.length === 0 ? (
-                <div className="db-empty"><CheckCircle2 size={26} color="#16a34a" /><span>All caught up!</span></div>
-              ) : notifications.map(n => {
-                const ns = NOTIF_STYLE[n.type] || NOTIF_STYLE.info
-                return (
-                  <div
-                    key={n.id}
-                    className="db-activity-row"
-                    style={{ background: n.read ? 'transparent' : '#f8faff', borderRadius: 8, padding: '10px 8px', marginBottom: 2 }}
-                  >
-                    <div style={{
-                      width: 32, height: 32, borderRadius: 9, flexShrink: 0,
-                      background: ns.bg, color: ns.color,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <BellRing size={14} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        fontSize: '.83rem', fontWeight: n.read ? 400 : 600,
-                        color: n.read ? '#64748b' : '#0f172a', lineHeight: 1.4,
-                      }}>
-                        {n.message}
-                      </div>
-                      <div style={{ fontSize: '.72rem', color: '#94a3b8', marginTop: 3 }}>{n.time}</div>
-                    </div>
-                    {!n.read && (
-                      <button onClick={() => markRead(n.id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', padding: 4, flexShrink: 0 }}>
-                        <Circle size={14} />
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+        {/* Quick Actions */}
+        <div className="db-card">
+          <div className="db-card-header">
+            <div className="db-card-title"><AlertCircle size={16} /> Quick Actions</div>
           </div>
-
-          {/* Quick links */}
-          <div className="db-card">
-            <div className="db-card-header">
-              <div className="db-card-title"><AlertCircle size={16} /> Quick Actions</div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[
-                { label: 'View My Files',       to: '/portal/files',      icon: FolderOpen },
-                { label: 'Check Documents',     to: '/portal/documents',  icon: FileText   },
-                { label: 'Payment Status',      to: '/portal/payments',   icon: Clock      },
-                { label: 'Insurance Details',   to: '/portal/insurance',  icon: ShieldCheck},
-              ].map(({ label, to, icon: Icon }) => (
-                <Link key={to} to={to} style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '9px 12px', borderRadius: 10,
-                  background: '#f8fafc', border: '1px solid #f1f5f9',
-                  textDecoration: 'none', color: '#334155', fontSize: '.84rem', fontWeight: 500,
-                  transition: 'background .12s',
-                }}>
-                  <Icon size={14} color="#2563eb" />
-                  {label}
-                  <ArrowRight size={13} color="#94a3b8" style={{ marginLeft: 'auto' }} />
-                </Link>
-              ))}
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[
+              { label: 'View My Files',       to: '/portal/files',      icon: FolderOpen },
+              { label: 'Check Documents',     to: '/portal/documents',  icon: FileText   },
+              { label: 'Payment Status',      to: '/portal/payments',   icon: Clock      },
+              { label: 'Insurance Details',   to: '/portal/insurance',  icon: ShieldCheck},
+            ].map(({ label, to, icon: Icon }) => (
+              <Link key={to} to={to} style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '9px 12px', borderRadius: 10,
+                background: '#f8fafc', border: '1px solid #f1f5f9',
+                textDecoration: 'none', color: '#334155', fontSize: '.84rem', fontWeight: 500,
+                transition: 'background .12s',
+              }}>
+                <Icon size={14} color="#2563eb" />
+                {label}
+                <ArrowRight size={13} color="#94a3b8" style={{ marginLeft: 'auto' }} />
+              </Link>
+            ))}
           </div>
         </div>
       </div>
