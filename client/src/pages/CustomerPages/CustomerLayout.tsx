@@ -5,6 +5,7 @@ import {
   Car, LogOut, BellRing, UserCircle2, ChevronDown,
 } from 'lucide-react'
 
+interface NavItem { to: string; label: string; icon: React.ComponentType<any> }
 interface NavGroup { title: string; items: NavItem[] }
 
 const customerNav: NavGroup[] = [
