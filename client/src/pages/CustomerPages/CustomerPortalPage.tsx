@@ -58,9 +58,14 @@ export default function CustomerPortalPage() {
   const [files, setFiles] = useState<FileRecord[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Read user from localStorage (DB fields: first_name, last_name, email, phone_number)
+  // Read user from localStorage or sessionStorage (DB fields: first_name, last_name, email, phone_number)
   const stored = (() => {
-    try { return JSON.parse(localStorage.getItem('an_current_user') || '{}') } catch { return {} }
+    try {
+      const raw = localStorage.getItem('an_current_user') || sessionStorage.getItem('an_current_user') || '{}'
+      return JSON.parse(raw)
+    } catch {
+      return {}
+    }
   })()
   const firstName = stored.first_name || stored.name?.split(' ')[0] || 'Customer'
   const greeting = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'
