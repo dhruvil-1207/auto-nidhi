@@ -23,9 +23,11 @@ import CustomerSettingsPage       from './pages/CustomerPages/CustomerSettingsPa
 
 // ── Data Entry pages ─────────────────────────────────────────────────
 import DataEntryLayout          from './pages/DataEntryPages/DataEntryLayout'
-import DataEntryDashboard       from './pages/DataEntryPages/DashboardPage'
+import DataEntryDashboard       from './pages/DataEntryPages/DataEntryDashboardPage'
 import DataEntryCustomers       from './pages/DataEntryPages/CustomersPage'
 import DataEntryFiles           from './pages/DataEntryPages/FilesPage'
+import DataEntryProfilePage     from './pages/DataEntryPages/DataEntryProfilePage'
+import DataEntrySettingsPage    from './pages/DataEntryPages/DataEntrySettingsPage'
 
 // ── Accountant pages ─────────────────────────────────────────────────
 import AccountantLayout         from './pages/AccountantPages/AccountantLayout'
@@ -94,6 +96,8 @@ function App() {
           <Route path="/data-entry/dashboard"  element={<DataEntryDashboard />} />
           <Route path="/data-entry/customers"  element={<DataEntryCustomers />} />
           <Route path="/data-entry/files"      element={<DataEntryFiles />} />
+          <Route path="/data-entry/profile"    element={<DataEntryProfilePage />} />
+          <Route path="/data-entry/settings"   element={<DataEntrySettingsPage />} />
         </Route>
 
         {/* ── Accountant portal ── */}
