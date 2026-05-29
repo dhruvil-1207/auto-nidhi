@@ -1,10 +1,10 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import {
   LayoutDashboard, FileText, FolderOpen, CreditCard, ShieldCheck,
   Car, LogOut, BellRing, UserCircle2, ChevronDown, Settings,
 } from 'lucide-react'
-import { customerDashboardApi } from '../../api/services'
+import NotificationPanel from '../../components/app/NotificationPanel'
 
 interface NavItem { to: string; label: string; icon: React.ComponentType<any> }
 interface NavGroup { title: string; items: NavItem[] }
@@ -32,10 +32,11 @@ export default function CustomerLayout() {
   const [userName, setUserName] = useState('Customer')
   const [userInitial, setUserInitial] = useState('C')
   const [profileOpen, setProfileOpen] = useState(false)
+  const [notifOpen, setNotifOpen] = useState(false) // Added missing state for the popup
   const profileRef = useRef<HTMLDivElement>(null)
 
-  // Load user name from localStorage
-  const loadUserName = () => {
+  // Centralized user loading logic
+  const loadUserName = useCallback(() => {
     try {
       const stored = localStorage.getItem('an_current_user') || sessionStorage.getItem('an_current_user')
       if (stored) {
@@ -45,8 +46,9 @@ export default function CustomerLayout() {
         setUserInitial(name.slice(0, 1).toUpperCase())
       }
     } catch { /* ignore */ }
-  }
+  }, [])
 
+  // Initial load and Auth check
   useEffect(() => {
     loadUserName()
     const role = localStorage.getItem('user_role')
@@ -54,18 +56,17 @@ export default function CustomerLayout() {
     if (!localStorage.getItem('access_token') || (role && role.toLowerCase() !== 'customer')) {
       navigate('/login', { replace: true })
     }
-  }, [navigate])
+  }, [navigate, loadUserName])
 
   // Listen to storage changes (e.g., when profile is updated on another tab or after save)
   useEffect(() => {
     window.addEventListener('storage', loadUserName)
-    // Listen for custom profile update event
     window.addEventListener('user-profile-updated', loadUserName)
     return () => {
       window.removeEventListener('storage', loadUserName)
       window.removeEventListener('user-profile-updated', loadUserName)
     }
-  }, [])
+  }, [loadUserName])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -84,6 +85,7 @@ export default function CustomerLayout() {
     localStorage.removeItem('user_role')
     localStorage.removeItem('user_name')
     localStorage.removeItem('an_current_user')
+    sessionStorage.removeItem('an_current_user') // Also clean session storage
     navigate('/', { replace: true })
   }
 
@@ -125,14 +127,19 @@ export default function CustomerLayout() {
           <div className="app-user">
 
             {/* Notification bell */}
-            <button
-              className="btn btn-ghost btn-sm"
-              title="Notifications"
-              onClick={() => navigate('/portal/notifications')}
-              style={{ position: 'relative', padding: '6px 8px' }}
-            >
-              <BellRing size={18} color="#64748b" />
-            </button>
+            <div style={{ position: 'relative' }}>
+              <button
+                className="btn btn-ghost btn-sm"
+                title="Notifications"
+                onClick={() => setNotifOpen(prev => !prev)}
+                style={{ position: 'relative', padding: '6px 8px' }}
+              >
+                <BellRing size={18} color="#64748b" />
+              </button>
+            </div>
+
+            {/* Notification Panel Popup */}
+            {notifOpen && <NotificationPanel onClose={() => setNotifOpen(false)} />}
 
             {/* Profile dropdown */}
             <div ref={profileRef} style={{ position: 'relative' }}>
