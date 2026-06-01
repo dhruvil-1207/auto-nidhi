@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, X, FileSpreadsheet, FileDown, Pencil, Trash2 } from "lucide-react";
+import { Eye, X, FileSpreadsheet, FileDown, Pencil } from "lucide-react";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -49,8 +49,6 @@ export default function CustomersPage() {
   const [viewCustomer, setViewCustomer] = useState<any>(null);
   const [editCustomer, setEditCustomer] = useState<any>(null);
   const [editForm, setEditForm] = useState(emptyForm());
-  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
-  const [editLoading, setEditLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
@@ -249,12 +247,11 @@ export default function CustomersPage() {
       pan_number: raw.pan_number || "",
       customer_type: raw.customer_type || "individual",
     });
-    setEditErrors({});
   };
 
   const handleEditSave = async () => {
     if (!editCustomer) return;
-    setEditLoading(true);
+    setLoading(true);
     try {
       const payload: any = {
         full_name: editForm.name.trim(),
@@ -278,7 +275,7 @@ export default function CustomersPage() {
     } catch (err: any) {
       message.error(extractError(err) || "Failed to update customer");
     } finally {
-      setEditLoading(false);
+      setLoading(false);
     }
   };
 
