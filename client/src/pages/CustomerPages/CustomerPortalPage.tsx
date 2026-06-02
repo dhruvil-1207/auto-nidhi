@@ -105,7 +105,7 @@ export default function CustomerPortalPage() {
   }))
 
   return (
-    <div className="db-root">
+    <div className="db-root customer-db">
       {/* ── Welcome Banner ── */}
       <div className="db-welcome">
         <div>
