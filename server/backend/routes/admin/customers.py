@@ -9,7 +9,7 @@ import re
 
 from backend.database import get_db
 from backend.models import Customer, FileRecord, SystemUser, MasterRole
-from backend.utils import get_current_admin, record_dashboard_event, get_password_hash
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event, get_password_hash
 
 
 router = APIRouter(prefix="/api/v1/customers", tags=["Admin Customers"])
@@ -75,7 +75,7 @@ def list_customers(page: int = 1, limit: int = 50, search: Optional[str] = None,
     return customers_data
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_customer(payload: CustomerCreate, db: Session = Depends(get_db), current_user: SystemUser = Depends(get_current_admin)):
+def create_customer(payload: CustomerCreate, db: Session = Depends(get_db), current_user: SystemUser = Depends(get_current_staff)):
     existing = db.query(Customer).filter(Customer.mobile_1 == payload.mobile_1).first()
     if existing:
         raise HTTPException(
@@ -177,7 +177,7 @@ def update_customer(
     customer_id: UUID,
     payload: CustomerUpdate,
     db: Session = Depends(get_db),
-    current_user: SystemUser = Depends(get_current_admin),
+    current_user: SystemUser = Depends(get_current_staff),
 ):
     customer = db.query(Customer).filter(Customer.id == customer_id).first()
     if not customer:

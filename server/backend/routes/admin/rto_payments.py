@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import RTOPayment, FileRecord, Customer, SystemUser
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/rto-payments", tags=["Admin RTO Payments"])
 
@@ -100,7 +100,7 @@ def list_rto_payments(
 def create_rto_payment(
     payload: RTOPaymentCreate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     if payload.payee_dealer_id and payload.payee_broker_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only one payee type can be provided")
@@ -147,7 +147,7 @@ def create_rto_payment(
 def delete_rto_payment(
     payment_id: UUID,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     payment = db.query(RTOPayment).filter(RTOPayment.id == payment_id, RTOPayment.is_deleted == False).first()
     
@@ -192,7 +192,7 @@ def update_rto_payment(
     payment_id: UUID,
     payload: RTOPaymentUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     payment = db.query(RTOPayment).filter(RTOPayment.id == payment_id, RTOPayment.is_deleted == False).first()
     

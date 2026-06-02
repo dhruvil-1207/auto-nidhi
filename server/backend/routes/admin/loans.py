@@ -5,7 +5,7 @@ from typing import Optional
 
 from backend.database import get_db
 from backend.models import Customer, FileRecord, FinanceInfo, MasterBank, SystemUser
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/loans", tags=["Admin Loans"])
 
@@ -71,7 +71,7 @@ def list_loans(
     status: Optional[str] = None,
     search: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     query = loans_query(db, eager=True)
 
@@ -101,7 +101,7 @@ def list_loans(
 @router.get("/stats/")
 def loan_stats(
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     return get_loan_stats(db)
 
@@ -111,7 +111,7 @@ def update_loan(
     file_number: str,
     payload: dict,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     loan = (
         loans_query(db)
@@ -152,7 +152,7 @@ def update_loan(
 def delete_loan_record(
     file_number: str,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     loan = (
         loans_query(db)
@@ -189,6 +189,6 @@ def delete_loan_record(
 def delete_loan(
     file_number: str,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     return delete_loan_record(file_number, db, current_admin)

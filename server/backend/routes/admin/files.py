@@ -8,7 +8,7 @@ import datetime
 
 from backend.database import get_db
 from backend.models import FileRecord, SystemUser, FinanceInfo
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/files", tags=["Admin Files"])
 
@@ -79,7 +79,7 @@ def list_files(
     return {"data": data, "total": total, "page": page, "limit": limit}
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_file(payload: FileCreate, db: Session = Depends(get_db), current_user: SystemUser = Depends(get_current_admin)):
+def create_file(payload: FileCreate, db: Session = Depends(get_db), current_user: SystemUser = Depends(get_current_staff)):
     
     # Auto-generate the file number securely
     new_file_num = generate_file_number(db)
@@ -134,7 +134,7 @@ def update_file(
     file_id: UUID,
     payload: FileUpdate,
     db: Session = Depends(get_db),
-    current_user: SystemUser = Depends(get_current_admin)
+    current_user: SystemUser = Depends(get_current_staff)
 ):
     file = db.query(FileRecord).filter(
         FileRecord.id == file_id,
@@ -181,7 +181,7 @@ def update_file(
 def delete_file(
     file_id: UUID,
     db: Session = Depends(get_db),
-    current_user: SystemUser = Depends(get_current_admin)
+    current_user: SystemUser = Depends(get_current_staff)
 ):
     file = db.query(FileRecord).filter(
         FileRecord.id == file_id,

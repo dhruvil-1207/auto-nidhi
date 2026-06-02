@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import MasterBank, SystemUser
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/finance-banks", tags=["Finance Banks"])
 
@@ -98,7 +98,7 @@ def list_all_finance_banks(db: Session = Depends(get_db)):
 def create_finance_bank(
     payload: FinanceBankCreate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     """Create a new finance bank."""
     # Check duplicate name
@@ -142,7 +142,7 @@ def update_finance_bank(
     bank_id: UUID,
     payload: FinanceBankUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     """Update an existing finance bank."""
     bank = db.query(MasterBank).filter(MasterBank.id == bank_id, MasterBank.is_deleted == False).first()
@@ -178,7 +178,7 @@ def update_finance_bank(
 def delete_finance_bank(
     bank_id: UUID,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     """Delete a finance bank (soft delete)."""
     bank = db.query(MasterBank).filter(MasterBank.id == bank_id, MasterBank.is_deleted == False).first()

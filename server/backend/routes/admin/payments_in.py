@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import PaymentIn, FileRecord, Customer, MasterCompanyBank, SystemUser
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/payments/in", tags=["Admin Payments IN"])
 
@@ -138,7 +138,7 @@ def list_payments_in(
 def create_payment_in(
     payload: PaymentInCreate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     new_payment = PaymentIn(
         file_id=payload.file_id,
@@ -189,7 +189,7 @@ def update_payment_in(
     payment_id: UUID,
     payload: PaymentInUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     payment = db.query(PaymentIn).filter(PaymentIn.id == payment_id).first()
     if not payment:
@@ -233,7 +233,7 @@ def update_payment_in(
 def delete_payment_in(
     payment_id: UUID,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     payment = db.query(PaymentIn).filter(PaymentIn.id == payment_id).first()
     if not payment:

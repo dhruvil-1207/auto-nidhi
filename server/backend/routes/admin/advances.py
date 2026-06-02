@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import Advance, MasterDealer, MasterBroker, SystemUser
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 
 router = APIRouter(prefix="/api/v1/advances", tags=["Admin Advances"])
@@ -111,7 +111,7 @@ def list_advances(
 def create_advance(
     payload: AdvanceCreate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     has_dealer = payload.dealer_id is not None
     has_broker = payload.broker_id is not None
@@ -184,7 +184,7 @@ def update_advance(
     advance_id: UUID,
     payload: AdvanceUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     advance = db.query(Advance).filter(
         Advance.id == advance_id,
@@ -252,7 +252,7 @@ def update_advance(
 def delete_advance(
     advance_id: UUID,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     advance = db.query(Advance).filter(
         Advance.id == advance_id,

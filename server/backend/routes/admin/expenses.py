@@ -12,7 +12,7 @@ from backend.models import (
     FileRecord,
     SystemUser
 )
-from backend.utils import get_current_admin, get_current_staff, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, get_current_staff, record_dashboard_event
 
 router = APIRouter(tags=["Admin Expenses"])
 
@@ -236,7 +236,7 @@ def update_expense(
 def delete_expense(
     expense_id: str,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     try:
         expense = db.query(ExpenseLedger).filter(

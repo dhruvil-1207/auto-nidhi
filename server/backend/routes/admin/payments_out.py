@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import PaymentOut, FileRecord, Customer, MasterCompanyBank, SystemUser
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/payments/out", tags=["Admin Payments OUT"])
 
@@ -149,7 +149,7 @@ def list_payments_out(
 def create_payment_out(
     payload: PaymentOutCreate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     # Validate company_bank_id if provided
     if payload.company_bank_id:
@@ -207,7 +207,7 @@ def update_payment_out(
     payment_id: UUID,
     payload: PaymentOutUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     payment = db.query(PaymentOut).filter(PaymentOut.id == payment_id).first()
     if not payment:
@@ -262,7 +262,7 @@ def update_payment_out(
 def delete_payment_out(
     payment_id: UUID,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     payment = db.query(PaymentOut).filter(PaymentOut.id == payment_id).first()
     if not payment:

@@ -6,7 +6,7 @@ from uuid import UUID
 from datetime import date
 from backend.database import get_db
 from backend.models import InsurancePayment, FileRecord, MasterCompanyBank, MasterInsuranceCompany, SystemUser
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/insurance-payments", tags=["Admin Insurance Payments"])
 
@@ -67,7 +67,7 @@ def list_insurance_payments(db: Session = Depends(get_db)):
 def create_insurance_payment(
     payload: InsurancePaymentCreate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     new_payment = InsurancePayment(**payload.dict())
     db.add(new_payment)
@@ -90,7 +90,7 @@ def create_insurance_payment(
 def soft_delete(
     payment_id: UUID,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     payment = db.query(InsurancePayment).filter(InsurancePayment.id == payment_id).first()
     if not payment: raise HTTPException(status_code=404)
@@ -130,7 +130,7 @@ def update_insurance_payment(
     payment_id: UUID,
     payload: InsurancePaymentUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     payment = db.query(InsurancePayment).filter(
         InsurancePayment.id == payment_id,

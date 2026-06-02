@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import MasterCompanyProfile, SystemUser
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/settings/company", tags=["Settings - Company"])
 
@@ -90,7 +90,7 @@ def get_company_profile(db: Session = Depends(get_db)):
 def create_company_profile(
     payload: CompanyProfileCreate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     """Create company profile. Only one record is expected."""
     existing = db.query(MasterCompanyProfile).first()
@@ -145,7 +145,7 @@ def update_company_profile(
     profile_id: UUID,
     payload: CompanyProfileUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     """Update the company profile by its UUID."""
     profile = db.query(MasterCompanyProfile).filter(MasterCompanyProfile.id == profile_id).first()
