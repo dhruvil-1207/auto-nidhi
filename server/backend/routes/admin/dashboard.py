@@ -4,7 +4,7 @@ from sqlalchemy import text
 
 from backend.database import get_db
 from backend.models import SystemUser
-from backend.utils import get_current_admin
+from backend.utils import get_current_staff
 
 router = APIRouter(prefix="/api/v1/dashboard", tags=["Admin Dashboard"])
 
@@ -404,7 +404,7 @@ def _build_dashboard(db: Session, current_admin: SystemUser):
 @router.get("/stats")
 def get_admin_dashboard(
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     return _build_dashboard(db, current_admin)
 
@@ -412,7 +412,7 @@ def get_admin_dashboard(
 @router.get("/pipeline")
 def get_dashboard_pipeline(
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     return {"pipeline": _get_pipeline(db), "admin": _admin_payload(current_admin)}
 
@@ -421,7 +421,7 @@ def get_dashboard_pipeline(
 def get_dashboard_recent_files(
     limit: int = 5,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     return {
         "recent_files": _get_recent_files(db, limit),
@@ -432,7 +432,7 @@ def get_dashboard_recent_files(
 @router.get("/financials")
 def get_dashboard_financials(
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     return {
         "financials": dict(_get_financials(db)),
@@ -444,7 +444,7 @@ def get_dashboard_financials(
 def get_dashboard_insurance_expiring(
     days: int = 7,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     return {
         "insurance_expiring": _get_insurance_expiring(db, days),
@@ -456,7 +456,7 @@ def get_dashboard_insurance_expiring(
 def get_dashboard_notifications(
     limit: int = 5,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     notifications = _get_notifications(db, current_admin, limit)
     return {
@@ -470,6 +470,6 @@ def get_dashboard_notifications(
 def get_dashboard_activity(
     limit: int = 7,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     return {"activity": _get_activity(db, limit), "admin": _admin_payload(current_admin)}

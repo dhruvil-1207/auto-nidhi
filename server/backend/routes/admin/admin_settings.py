@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import UserNotificationPreference, SystemUser, MasterRole
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-this-secret-key")
 ALGORITHM = "HS256"
@@ -41,7 +41,7 @@ def _decode_token(token: str) -> dict:
 @router.get("/notification-preferences")
 def get_notification_preferences(
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     rows = db.query(UserNotificationPreference).filter(
         UserNotificationPreference.user_id == current_admin.id
@@ -58,7 +58,7 @@ def get_notification_preferences(
 def update_notification_preferences(
     payload: NotificationPreferencesUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     allowed_keys = set(DEFAULT_PREFS.keys())
     old_preferences = get_notification_preferences(db, current_admin)
@@ -103,7 +103,7 @@ def update_notification_preferences(
 def get_current_session(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     payload = _decode_token(token)
 
@@ -128,7 +128,7 @@ def get_current_session(
 @router.get("/security")
 def get_security_status(
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     role = db.query(MasterRole).filter(MasterRole.id == current_admin.role_id).first()
 

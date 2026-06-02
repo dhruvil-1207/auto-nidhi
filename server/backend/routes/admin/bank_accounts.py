@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import MasterCompanyBank, SystemUser
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/settings/banks", tags=["Settings - Bank Accounts"])
 
@@ -117,7 +117,7 @@ def list_bank_accounts(
 def create_bank_account(
     payload: BankAccountCreate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     """Create a new company bank account."""
     # Check for duplicate account number
@@ -163,7 +163,7 @@ def update_bank_account(
     bank_id: UUID,
     payload: BankAccountUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     """Update an existing bank account by UUID."""
     bank = db.query(MasterCompanyBank).filter(MasterCompanyBank.id == bank_id, MasterCompanyBank.is_deleted == False).first()
@@ -215,7 +215,7 @@ def update_bank_account(
 def delete_bank_account(
     bank_id: UUID,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     """Delete a company bank account by UUID (soft delete)."""
     bank = db.query(MasterCompanyBank).filter(MasterCompanyBank.id == bank_id, MasterCompanyBank.is_deleted == False).first()

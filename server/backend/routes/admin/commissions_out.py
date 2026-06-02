@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import CommissionOut, FileRecord, MasterCompanyBank, SystemUser
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/commissions/out", tags=["Admin Commission OUT"])
 
@@ -144,7 +144,7 @@ def list_commissions_out(
 def create_commission_out(
     payload: CommissionOutCreate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     # Validate company_bank_id if provided
     if payload.company_bank_id:
@@ -217,7 +217,7 @@ def update_commission_out(
     commission_id: UUID,
     payload: CommissionOutUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     row = db.query(CommissionOut).filter(CommissionOut.id == commission_id).first()
     if not row:
@@ -283,7 +283,7 @@ def update_commission_out(
 def delete_commission_out(
     commission_id: UUID,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     row = db.query(CommissionOut).filter(CommissionOut.id == commission_id).first()
     if not row:

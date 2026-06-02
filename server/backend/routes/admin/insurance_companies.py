@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from backend.database import get_db
 from backend.models import SystemUser
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/masters", tags=["Insurance Companies"])
 
@@ -37,7 +37,7 @@ def list_insurance_companies(db: Session = Depends(get_db)):
 def create_insurance_company(
     data: InsuranceCompanyIn,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     result = db.execute(text("""
         INSERT INTO master_insurance_company (company_name, contact_person, mobile_no, phone_no)
@@ -63,7 +63,7 @@ def update_insurance_company(
     id: str,
     data: InsuranceCompanyUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     existing = db.execute(text("""
         SELECT id, company_name, contact_person, mobile_no, phone_no
@@ -101,7 +101,7 @@ def update_insurance_company(
 def delete_insurance_company(
     id: str,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     existing = db.execute(text("""
         SELECT id, company_name, contact_person, mobile_no, phone_no

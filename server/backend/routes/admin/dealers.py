@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import MasterDealer, SystemUser, FileRecord
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/dealers", tags=["Admin Dealers"])
 
@@ -118,7 +118,7 @@ def list_dealers(search: Optional[str] = None, db: Session = Depends(get_db)):
 def create_dealer(
     payload: DealerCreate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     if payload.phone:
         existing = db.query(MasterDealer).filter(
@@ -164,7 +164,7 @@ def update_dealer(
     dealer_id: UUID,
     payload: DealerUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     dealer = db.query(MasterDealer).filter(
         MasterDealer.id == dealer_id,
@@ -223,7 +223,7 @@ def update_dealer(
 def delete_dealer(
     dealer_id: UUID,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     dealer = db.query(MasterDealer).filter(MasterDealer.id == dealer_id).first()
 

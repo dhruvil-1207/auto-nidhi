@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import CommissionIn, FileRecord, SystemUser
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/commissions/in", tags=["Admin Commission IN"])
 
@@ -136,7 +136,7 @@ def list_commissions_in(
 def create_commission_in(
     payload: CommissionInCreate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     new_row = CommissionIn(
         file_id=payload.file_id,
@@ -195,7 +195,7 @@ def update_commission_in(
     commission_id: UUID,
     payload: CommissionInUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     row = db.query(CommissionIn).filter(CommissionIn.id == commission_id).first()
     if not row:
@@ -260,7 +260,7 @@ def update_commission_in(
 def delete_commission_in(
     commission_id: UUID,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     row = db.query(CommissionIn).filter(CommissionIn.id == commission_id).first()
     if not row:

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from backend.database import get_db
 from backend.models import SystemUser
-from backend.utils import get_current_admin, record_dashboard_event
+from backend.utils import get_current_staff, get_current_admin, record_dashboard_event
 
 router = APIRouter(prefix="/api/v1/masters", tags=["Insurance Types"])
 
@@ -35,7 +35,7 @@ def list_insurance_types(db: Session = Depends(get_db)):
 def create_insurance_type(
     data: InsuranceTypeIn,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     """
     Create a new insurance type.
@@ -86,7 +86,7 @@ def update_insurance_type(
     id: str,
     data: InsuranceTypeUpdate,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     """
     Update an insurance type by ID.
@@ -139,7 +139,7 @@ def update_insurance_type(
 def delete_insurance_type(
     id: str,
     db: Session = Depends(get_db),
-    current_admin: SystemUser = Depends(get_current_admin),
+    current_admin: SystemUser = Depends(get_current_staff),
 ):
     """
     Soft delete an insurance type by ID.
