@@ -58,19 +58,19 @@ const adminNav: NavGroup[] = [
 const dataEntryNav: NavGroup[] = [
   {
     title: 'Overview', items: [
-      { to: '/data-entry/dashboard',  label: 'Dashboard', icon: LayoutDashboard },
-      { to: '/data-entry/customers',  label: 'Customers', icon: Users },
-      { to: '/data-entry/files',      label: 'Files',     icon: FolderOpen },
-      { to: '/data-entry/requests',   label: 'Service Requests', icon: ClipboardList },
+      { to: '/staff/dashboard',  label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/staff/customers',  label: 'Customers', icon: Users },
+      { to: '/staff/files',      label: 'Files',     icon: FolderOpen },
+      { to: '/staff/requests',   label: 'Service Requests', icon: ClipboardList },
     ],
   },
   {
     title: 'Finance', items: [
-      { to: '/data-entry/payments/in',          label: 'Payment IN',          icon: ArrowDownToLine  },
-      { to: '/data-entry/payments/out',         label: 'Payment OUT',         icon: ArrowUpFromLine  },
-      { to: '/data-entry/rto-payments',         label: 'RTO Payments',        icon: Receipt          },
-      { to: '/data-entry/insurance-payments',   label: 'Insurance Payments',  icon: ShieldCheck      },
-      { to: '/data-entry/expenses',             label: 'Expenses',            icon: Wallet           },
+      { to: '/staff/payments/in',          label: 'Payment IN',          icon: ArrowDownToLine  },
+      { to: '/staff/payments/out',         label: 'Payment OUT',         icon: ArrowUpFromLine  },
+      { to: '/staff/rto-payments',         label: 'RTO Payments',        icon: Receipt          },
+      { to: '/staff/insurance-payments',   label: 'Insurance Payments',  icon: ShieldCheck      },
+      { to: '/staff/expenses',             label: 'Expenses',            icon: Wallet           },
     ],
   },
 ]
@@ -203,7 +203,7 @@ export default function AdminLayout() {
   const closeNotifs = useCallback(() => setShowNotifs(false), [])
 
   // Resolve Title smoothly dynamically based on role routes
-  const baseRoute = location.pathname.replace('/data-entry', '').replace('/accountant', '').replace('/admin', '')
+  const baseRoute = location.pathname.replace('/staff', '').replace('/accountant', '').replace('/admin', '')
   const titleMap: Record<string, string> = {
     '/dashboard': 'Dashboard', '/customers': 'Customers', '/files': 'Files',
     '/requests': 'Service Requests',
@@ -228,7 +228,7 @@ export default function AdminLayout() {
   
   // Choose Navigation Array based on Role
   const activeNav = userRole === 'admin' ? adminNav : (userRole === 'accountant' ? accountantNav : dataEntryNav)
-  const profilePrefix = userRole === 'admin' ? '/admin' : `/${userRole.replace('_', '-')}`
+  const profilePrefix = userRole === 'admin' ? '/admin' : (userRole === 'data_entry' ? '/staff' : `/${userRole.replace('_', '-')}`)
 
   return (
     <div className="app-shell">
