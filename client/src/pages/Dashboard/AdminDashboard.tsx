@@ -55,15 +55,21 @@ const adminNav: NavGroup[] = [
       { to: '/settings/accountants',  label: 'Accountants',   icon: Users    },
     ],
   },
+  {
+    title: 'Operations', items: [
+      { to: '/admin/review-desk', label: 'Review Desk', icon: ClipboardList },
+    ],
+  },
 ]
 
 const dataEntryNav: NavGroup[] = [
   {
     title: 'Overview', items: [
-      { to: '/staff/dashboard',  label: 'Dashboard', icon: LayoutDashboard },
-      { to: '/staff/customers',  label: 'Customers', icon: Users },
-      { to: '/staff/files',      label: 'Files',     icon: FolderOpen },
-      { to: '/staff/requests',   label: 'Service Requests', icon: ClipboardList },
+      { to: '/staff/dashboard',      label: 'Dashboard',        icon: LayoutDashboard },
+      { to: '/staff/customers',      label: 'Customers',        icon: Users           },
+      { to: '/staff/files',          label: 'Files',            icon: FolderOpen      },
+      { to: '/staff/requests',       label: 'Service Requests', icon: ClipboardList   },
+      { to: '/staff/modifications',  label: 'Modifications',    icon: ClipboardList   },
     ],
   },
   {
@@ -80,8 +86,9 @@ const dataEntryNav: NavGroup[] = [
 const accountantNav: NavGroup[] = [
   {
     title: 'Overview', items: [
-      { to: '/accountant/dashboard',  label: 'Dashboard', icon: LayoutDashboard },
-      { to: '/accountant/files',      label: 'Files',     icon: FolderOpen },
+      { to: '/accountant/dashboard',     label: 'Dashboard',     icon: LayoutDashboard },
+      { to: '/accountant/files',         label: 'Files',         icon: FolderOpen      },
+      { to: '/accountant/modifications', label: 'Modifications', icon: ClipboardList   },
     ],
   },
   {
@@ -157,7 +164,6 @@ export default function AdminLayout() {
       const user = userRaw ? JSON.parse(userRaw) : null
       if (!user) return
 
-      // Lookup the consultant ID using email to handle database payloads lacking user UUID
       const consultantsList = [
         { id: 'c2d88add-f8a6-49c6-a9d4-6603ea46a459', email: 'james@gmail.com' },
         { id: '4d763da5-8ee8-4074-ac8e-fe98767c4ad8', email: 'dataentry@gmail.com' }
@@ -224,6 +230,9 @@ export default function AdminLayout() {
     '/settings/accountants': 'Accountants',
     '/profile': 'My Profile',
     '/settings': 'Account Settings',
+    // ⚡ NEW: Operational Overrides & Adjustments Headers Map
+    '/modifications': 'Data Overrides',
+    '/review-desk': 'Administrative Review Desk'
   }
   const pageTitle = titleMap[baseRoute] || 'AutoNidhi'
 

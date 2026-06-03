@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import {
   LayoutDashboard, FolderOpen, ArrowDownToLine, ArrowUpFromLine,
   Receipt, ShieldCheck, Wallet, Landmark, BadgePercent,
-  Car, LogOut, BellRing,
+  Car, LogOut, BellRing, Settings
 } from 'lucide-react'
 import logoDark from '../../assets/AutoNidhi Logo 1.png'
 
@@ -27,6 +27,12 @@ const accountantNav: NavGroup[] = [
       { to: '/accountant/advances',            label: 'Advances',           icon: Landmark         },
       { to: '/accountant/commission/in',       label: 'Commission IN',      icon: BadgePercent     },
       { to: '/accountant/commission/out',      label: 'Commission OUT',     icon: BadgePercent     },
+    ],
+  },
+  // ⚡ NEW: Operational Overrides & Adjustments Section
+  {
+    title: 'Operations', items: [
+      { to: '/accountant/modifications',       label: 'Ledger Overrides',   icon: Settings         },
     ],
   },
 ]
