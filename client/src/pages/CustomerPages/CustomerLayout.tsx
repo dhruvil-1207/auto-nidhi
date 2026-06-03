@@ -5,6 +5,7 @@ import {
   Car, LogOut, Bell, UserCircle2, ChevronDown, Settings,
 } from 'lucide-react'
 import NotificationPanel from '../../components/app/NotificationPanel'
+import logoDark from '../../assets/AutoNidhi Logo 1.png'
 
 // Import the notification store methods
 import { unreadCount, subscribe, fetchNotifications } from '../../store/notificationStore'
@@ -114,7 +115,7 @@ export default function CustomerLayout() {
       <aside className="app-sidebar">
         <div className="sb-logo">
           <div className="sb-logo-mark">
-            <Car size={18} color="#fff" />
+            <img src={logoDark} alt="AutoNidhi" className="sidebar-logo-image" />
           </div>
         </div>
 
