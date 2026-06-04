@@ -69,8 +69,8 @@ def list_users_by_role(
             "email": u.email,
             "phone_number": u.phone_number or "—",
             "is_active": u.is_active,
-            "last_login": u.last_login.isoformat() if u.last_login else None,
-            "created_at": u.created_at.isoformat() if u.created_at else None,
+            "last_login": u.last_login.isoformat() if hasattr(u.last_login, "isoformat") else str(u.last_login) if u.last_login else None,
+            "created_at": u.created_at.isoformat() if hasattr(u.created_at, "isoformat") else str(u.created_at) if u.created_at else None,
             "role": role_name,
             # Summary stats
             "files_created": files_created,
@@ -219,7 +219,7 @@ def get_user_detail(
         "phone_number": user.phone_number or "—",
         "is_active": user.is_active,
         "role": role_name,
-        "last_login": user.last_login.isoformat() if user.last_login else None,
+        "last_login": user.last_login.isoformat() if hasattr(user.last_login, "isoformat") else str(user.last_login) if user.last_login else None,
         "joined": user.created_at.strftime("%d %b %Y") if user.created_at else "—",
         # Activity
         "files_created": files_total,
