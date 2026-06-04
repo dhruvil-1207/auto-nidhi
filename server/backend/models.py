@@ -452,3 +452,24 @@ class Notification(Base):
 
     user = relationship("SystemUser", foreign_keys=[user_id])
     file = relationship("FileRecord", foreign_keys=[file_id])
+
+class ModificationRequest(Base):
+    __tablename__ = "modification_request"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("uuid_generate_v4()"))
+    entity_type = Column(String(100), nullable=False)
+    entity_id = Column(String(255), nullable=False)
+    request_type = Column(String(30), nullable=False)
+    reason = Column(Text, nullable=False)
+    status = Column(String(30), nullable=False, default="pending")
+
+    submitted_by = Column(UUID(as_uuid=True), ForeignKey("system_user.id"), nullable=False)
+    reviewed_by = Column(UUID(as_uuid=True), ForeignKey("system_user.id"), nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+    decision_note = Column(Text, nullable=True)
+
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=text("NOW()"))
+
+    submitter = relationship("SystemUser", foreign_keys=[submitted_by])
+    reviewer = relationship("SystemUser", foreign_keys=[reviewed_by])
