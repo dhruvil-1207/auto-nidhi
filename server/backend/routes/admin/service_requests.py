@@ -6,10 +6,17 @@ from uuid import UUID
 import json
 
 from backend.database import get_db
-from backend.models import SystemUser, Customer
-from backend.utils import get_current_staff, record_dashboard_event, send_targeted_notification
+from backend.models import SystemUser, Customer, MasterRole
+from backend.utils import get_current_user, get_current_staff, record_dashboard_event, send_targeted_notification
 
 router = APIRouter(prefix="/api/v1/service-requests", tags=["Service Requests"])
+
+def _is_uuid(value: Any) -> bool:
+    try:
+        UUID(str(value))
+        return True
+    except (TypeError, ValueError):
+        return False
 
 def get_service_request_query():
     return """
@@ -38,7 +45,7 @@ def get_service_request_query():
 def list_service_requests(
     consultant_id: Optional[str] = Query(None, description="Filter by consultant ID"),
     db: Session = Depends(get_db),
-    current_user: SystemUser = Depends(get_current_staff)
+    current_user: SystemUser = Depends(get_current_user)
 ):
     """
     Get all service requests.
@@ -50,6 +57,16 @@ def list_service_requests(
         params = {}
         
         conditions = []
+
+        role = db.query(MasterRole).filter(MasterRole.id == current_user.role_id).first()
+        role_name = role.role_name.lower() if role and role.role_name else ""
+
+        if role_name == "customer":
+            customer = db.query(Customer).filter(Customer.email == current_user.email).first()
+            if not customer:
+                return []
+            conditions.append("sr.customer_id = :current_customer_id")
+            params["current_customer_id"] = str(customer.id)
         
         if consultant_id:
             conditions.append("sr.consultant_id = :consultant_id")
@@ -77,17 +94,60 @@ def list_service_requests(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/consultants", summary="List available consultants")
+def list_consultants(
+    db: Session = Depends(get_db),
+    current_user: SystemUser = Depends(get_current_user)
+):
+    """
+    Return active staff/data-entry users for customer service request assignment.
+    Customer application forms use this for the "choose your consultant" dropdown.
+    """
+    try:
+        rows = db.execute(
+            text("""
+                SELECT
+                    u.id,
+                    u.first_name,
+                    u.last_name,
+                    CONCAT(u.first_name, ' ', COALESCE(u.last_name, '')) AS full_name,
+                    u.email,
+                    u.phone_number
+                FROM system_user u
+                JOIN master_role r ON r.id = u.role_id
+                WHERE u.is_active = TRUE
+                  AND LOWER(REPLACE(r.role_name, ' ', '_')) IN ('data_entry', 'staff', 'dataentry')
+                ORDER BY u.first_name, u.last_name
+            """)
+        ).mappings().fetchall()
+
+        return [dict(row) for row in rows]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/", summary="Create a new service request")
 def create_service_request(
     payload: dict,
     db: Session = Depends(get_db),
-    current_user: SystemUser = Depends(get_current_staff)
+    current_user: SystemUser = Depends(get_current_user)
 ):
     """
     Create a new service request (can be logged by staff on behalf of customer).
     """
     try:
         customer_id = payload.get("customer_id")
+
+        customer = None
+        if customer_id and _is_uuid(customer_id):
+            customer = db.query(Customer).filter(Customer.id == customer_id).first()
+
+        if not customer:
+            customer = db.query(Customer).filter(Customer.email == current_user.email).first()
+
+        if not customer:
+            raise HTTPException(status_code=400, detail="Valid customer profile is required")
+
+        customer_id = str(customer.id)
         request_type = payload.get("request_type")
         details = payload.get("details", {})
         remarks = payload.get("remarks")
@@ -116,20 +176,28 @@ def create_service_request(
         result = db.execute(insert_query, params).mappings().first()
         db.commit()
         
-        # Notify consultant if assigned
+        # Notify consultant if assigned. Notification failures should not
+        # turn a successfully created service request into a 500 response.
         if consultant_id:
-            send_targeted_notification(
-                db, 
-                UUID(consultant_id), 
-                f"New {request_type} service request assigned to you."
-            )
-            db.commit()
+            try:
+                send_targeted_notification(
+                    db,
+                    UUID(str(consultant_id)),
+                    f"New {request_type} service request assigned to you."
+                )
+                db.commit()
+            except Exception:
+                db.rollback()
 
-        return {
-            "id": result["id"],
-            "status": "pending",
-            "message": "Service Request created successfully"
-        }
+        created_id = result["id"]
+
+        query = get_service_request_query() + " WHERE sr.id = :request_id"
+        created = db.execute(text(query), {"request_id": str(created_id)}).mappings().first()
+
+        return dict(created)
+
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -195,7 +263,7 @@ def update_request_status(
 def mark_request_viewed(
     request_id: UUID,
     db: Session = Depends(get_db),
-    current_user: SystemUser = Depends(get_current_staff)
+    current_user: SystemUser = Depends(get_current_user)
 ):
     """
     Mark a service request as viewed by the consultant.

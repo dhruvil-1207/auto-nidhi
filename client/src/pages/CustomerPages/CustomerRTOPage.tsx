@@ -142,13 +142,9 @@ export default function CustomerRTOPage() {
 
   const loadSubmittedRequests = () => {
     setLoadingHistory(true)
-    const userRaw = localStorage.getItem('an_current_user')
-    const user = userRaw ? JSON.parse(userRaw) : null
-    const userId = user?.id || 'cust-direct'
-    
     serviceRequestsApi.list()
       .then(res => {
-        const filtered = (res || []).filter((r: any) => r.customer_id === userId && r.request_type === 'rto')
+        const filtered = (res || []).filter((r: any) => r.request_type === 'rto')
         setSubmittedRequests(filtered)
       })
       .catch(err => {
@@ -235,7 +231,6 @@ export default function CustomerRTOPage() {
       const userRaw = localStorage.getItem('an_current_user')
       const user = userRaw ? JSON.parse(userRaw) : null
       await serviceRequestsApi.create({
-        customer_id: user?.id || 'cust-direct',
         customer_name: user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'Customer',
         customer_email: user?.email || '',
         customer_mobile: user?.phone_number || '9876543210',
