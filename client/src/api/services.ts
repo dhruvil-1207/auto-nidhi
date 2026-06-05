@@ -943,8 +943,8 @@ export interface ServiceRequest {
 
 export const serviceRequestsApi = {
   listConsultants: async (): Promise<any[]> => {
-    const { data } = await api.get('/admin/user-profiles/', { params: { role: 'staff' } })
-    return data
+    const { data } = await api.get('/service-requests/consultants')
+    return Array.isArray(data) ? data : (data.data || [])
   },
 
   list: async (consultantId?: string): Promise<ServiceRequest[]> => {
