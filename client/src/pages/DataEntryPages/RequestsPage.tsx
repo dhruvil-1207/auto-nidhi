@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight
 } from 'lucide-react'
 import PageHeader from '../../components/app/PageHeader'
-import { serviceRequestsApi, customersApi, type ServiceRequest } from '../../api/services'
+import { serviceRequestsApi, customersApi, filesApi, type ServiceRequest } from '../../api/services'
 import { addNotification } from '../../store/notificationStore'
 import { message } from 'antd'
 
@@ -57,6 +57,7 @@ function Pagination({
 export default function RequestsPage() {
   const [requests, setRequests] = useState<ServiceRequest[]>([])
   const [customers, setCustomers] = useState<any[]>([])
+  const [availableFiles, setAvailableFiles] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
@@ -106,17 +107,20 @@ export default function RequestsPage() {
     try {
       // 1. Fetch requests
       const data = await serviceRequestsApi.list()
-      // Filter requests based on consultant assignment (staff sees their own customers' requests)
-      // Admin sees everything
       const filteredForRole = userRole === 'admin' 
         ? data 
         : data.filter(r => r.consultant_id === currentUserId)
       
       setRequests(filteredForRole)
 
-      // 2. Fetch customers for creation dropdown
-      const custData = await customersApi.list(1, 100)
-      setCustomers(Array.isArray(custData) ? custData : (custData.data || []))
+      // 2. Fetch dropdown data safely (Won't crash page if files fail)
+      customersApi.list(1, 100).then(res => {
+        setCustomers(Array.isArray(res) ? res : (res?.data || res?.items || []))
+      }).catch(console.error)
+
+      filesApi.list(1, 500).then(res => {
+        setAvailableFiles(Array.isArray(res) ? res : (res?.data || res?.items || []))
+      }).catch(console.error)
 
       // 3. Check for overdue unseen requests (pending, unseen, and > 3 days old)
       const threeDaysAgo = Date.now() - 3 * 24 * 60 * 60 * 1000
@@ -150,6 +154,31 @@ export default function RequestsPage() {
   useEffect(() => {
     loadData()
   }, [])
+
+  // AUTO-FILL LOGIC: Triggers when customer or RTO tab changes
+  useEffect(() => {
+    if (createReqType === 'rto' && createCustomerId) {
+      const selectedCustomer = customers.find(c => String(c.id) === String(createCustomerId));
+
+      // Aggressive matching: Checks ID, nested objects, and exact name matches
+      const matchingFile = availableFiles.find(f => {
+        const matchById = String(f.customer_id) === String(createCustomerId) || String(f.customer) === String(createCustomerId);
+        const matchByNestedId = f.customer && String(f.customer.id) === String(createCustomerId);
+        const matchByName = selectedCustomer && typeof f.customer === 'string' && (
+          f.customer === selectedCustomer.full_name || 
+          f.customer === selectedCustomer.name ||
+          f.customer_name === selectedCustomer.full_name
+        );
+        return matchById || matchByNestedId || matchByName;
+      });
+      
+      if (matchingFile && matchingFile.file_number) {
+        setRtoDetails(prev => ({ ...prev, file_number: matchingFile.file_number }));
+      }
+    } else if (createReqType === 'rto' && !createCustomerId) {
+       setRtoDetails(prev => ({ ...prev, file_number: '' }));
+    }
+  }, [createCustomerId, createReqType, availableFiles, customers]);
 
   // Filter list computations
   const filteredRequests = useMemo(() => {
@@ -755,7 +784,14 @@ export default function RequestsPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8 }}>
                     <div>
                       <label className="form-label">File Number</label>
-                      <input type="text" required value={rtoDetails.file_number} onChange={e => setRtoDetails(prev => ({ ...prev, file_number: e.target.value }))} className="form-input" placeholder="e.g. FILE/2026/001" />
+                      <input 
+                        type="text" 
+                        required 
+                        value={rtoDetails.file_number} 
+                        onChange={e => setRtoDetails(prev => ({ ...prev, file_number: e.target.value }))} 
+                        className="form-input" 
+                        placeholder="e.g. FILE/2026/001" 
+                      />
                     </div>
                     <div>
                       <label className="form-label">RTO Service Type</label>
