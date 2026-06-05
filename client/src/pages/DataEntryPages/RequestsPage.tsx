@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight
 } from 'lucide-react'
 import PageHeader from '../../components/app/PageHeader'
-import { serviceRequestsApi, type ServiceRequest } from '../../api/services'
+import { serviceRequestsApi, customersApi, filesApi, type ServiceRequest } from '../../api/services'
 import { addNotification } from '../../store/notificationStore'
 import { message } from 'antd'
 
@@ -95,8 +95,6 @@ export default function RequestsPage() {
     try {
       // 1. Fetch requests
       const data = await serviceRequestsApi.list()
-      // Filter requests based on consultant assignment (staff sees their own customers' requests)
-      // Admin sees everything
       const filteredForRole = userRole === 'admin' 
         ? data 
         : data.filter(r => r.consultant_id === currentUserId || r.consultant_id === '4d763da5-8ee8-4074-ac8e-fe98767c4ad8' || r.consultant_id === 'c2d88add-f8a6-49c6-a9d4-6603ea46a459')
