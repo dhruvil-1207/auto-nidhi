@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import {
   X, FileText, User, CreditCard, ShieldCheck, Car,
-  TrendingUp, TrendingDown, Calendar, UserCheck, Loader2,
+  TrendingUp, TrendingDown, Loader2,
 } from 'lucide-react'
 import { filesApi } from '../../api/services'
 
