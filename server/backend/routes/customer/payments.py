@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import PaymentIn, FileRecord, SystemUser, Customer
-from backend.utils import get_current_customer
+from backend.utils import get_current_customer, get_customer_for_user
 
 router = APIRouter(prefix="/api/v1/portal", tags=["Customer Portal"])
 
@@ -13,8 +13,7 @@ def customer_payments_status(
     current_user: SystemUser = Depends(get_current_customer),
     db: Session = Depends(get_db),
 ):
-    # Step 1: Find the customer record linked to this system_user by email
-    customer = db.query(Customer).filter(Customer.email == current_user.email).first()
+    customer = get_customer_for_user(current_user, db)
     if not customer:
         return []
 
