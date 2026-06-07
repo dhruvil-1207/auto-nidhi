@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Mail, Phone, MapPin, Calendar, User,
   FolderOpen, TrendingUp, TrendingDown, ShieldCheck,
-  Car, CreditCard, IndianRupee, Receipt, BadgeCheck,
+  Car, CreditCard, IndianRupee, Receipt, BadgeCheck, Clock,
 } from 'lucide-react'
 import { customerProfileApi } from '../../api/services'
 
@@ -23,6 +23,7 @@ interface CustomerDetail {
   customer_type: string
   created_at: string | null
   added_by: string | null
+  last_login: string | null  // from linked system_user account
   // Activity
   files_total: number
   files_by_status: Record<string, number>
@@ -54,6 +55,19 @@ function fmtDate(iso: string | null) {
   if (!iso) return '—'
   try {
     return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+  } catch { return '—' }
+}
+
+function fmtLastLogin(iso: string | null) {
+  if (!iso) return 'Never logged in'
+  try {
+    const d = new Date(iso)
+    const now = new Date()
+    const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000)
+    if (diffDays === 0) return 'Today'
+    if (diffDays === 1) return 'Yesterday'
+    if (diffDays < 7) return `${diffDays} days ago`
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
   } catch { return '—' }
 }
 
@@ -151,8 +165,9 @@ export default function CustomerDetailPage() {
     .join('')
     .toUpperCase()
 
-  const typeLabel = customer.customer_type === 'company' ? 'Company' : 'Individual'
-  const typeColor = customer.customer_type === 'company'
+  // Fix: DB enum uses 'business' not 'company'
+  const typeLabel = customer.customer_type === 'business' ? 'Business' : 'Individual'
+  const typeColor = customer.customer_type === 'business'
     ? { bg: '#dbeafe', color: '#1e40af' }
     : { bg: '#fef9c3', color: '#854d0e' }
 
@@ -221,6 +236,9 @@ export default function CustomerDetailPage() {
                 <Calendar size={14} /> DOB: {fmtDate(customer.date_of_birth)}
               </span>
             )}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '.84rem', color: '#64748b' }}>
+              <Clock size={14} /> Last login: {fmtLastLogin(customer.last_login)}
+            </span>
           </div>
 
           {/* KYC row */}

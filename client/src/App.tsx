@@ -60,6 +60,7 @@ import RequestsPage           from './pages/DataEntryPages/RequestsPage'
 import StaffModificationsPage      from './pages/DataEntryPages/StaffModificationsPage'
 import AccountantModificationsPage from './pages/AccountantPages/AccountantModificationsPage'
 import AdminReviewDeskPage         from './pages/AdminPages/AdminReviewDeskPage'
+import AnalyticsPage               from './pages/AdminPages/AnalyticsPage'
 
 function App() {
   return (
@@ -139,6 +140,7 @@ function App() {
           <Route path="/loans"                       element={<LoansPage />}              />
           {/* ⚡ NEW: Centralized Admin Review Check Desk Route */}
           <Route path="/admin/review-desk"           element={<AdminReviewDeskPage />}    />
+          <Route path="/analytics"                   element={<AnalyticsPage />}          />
           <Route path="/masters/dealers"             element={<DealersPage />}            />
           <Route path="/masters/brokers"             element={<BrokersPage />}            />
           <Route path="/masters/finance-banks"       element={<FinanceBanksPage />}       />

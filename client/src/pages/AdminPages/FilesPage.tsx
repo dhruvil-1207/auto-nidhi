@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import PageHeader from "../../components/app/PageHeader";
 import DataTable from "../../components/app/DataTable";
 import Modal from "../../components/app/Modal";
@@ -12,6 +11,7 @@ import autoTable from 'jspdf-autotable'
 import { Pencil, Trash2, AlertTriangle } from 'lucide-react'
 import { SelectiveExportModal } from "../../components/app/SelectiveExportModal";
 import { exportDetailPDFsAsZip } from "../../utils/zipExportUtils";
+import FileDetailDrawer from "../../components/app/FileDetailDrawer";
 
 const STATUS_COLOR: Record<string, { bg: string; text: string; dot: string }> = {
   draft: { bg: '#f1f5f9', text: '#475569', dot: '#94a3b8' },
@@ -32,10 +32,10 @@ function formatStatus(status: string) {
 }
 
 export default function FilesPage() {
-  const navigate = useNavigate();
   const role = localStorage.getItem('user_role') || 'guest';
   const isAdmin = role === 'admin';
-  
+
+  const [drawerFileId, setDrawerFileId] = useState<string | null>(null);
   const [rows, setRows] = useState<any[]>([]);
   const [filteredRows, setFilteredRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -301,7 +301,7 @@ export default function FilesPage() {
               <a
                 className="auth-link"
                 style={{ cursor: "pointer", fontWeight: 600 }}
-                onClick={() => navigate(`/files/${r.id}`)}
+                onClick={() => setDrawerFileId(r.id)}
               >
                 {r.file_number}
               </a>
@@ -325,7 +325,7 @@ export default function FilesPage() {
                 <button
                   className="btn btn-outline btn-sm"
                   style={{ padding: '5px 10px', borderColor: '#a5b4fc', color: '#4f46e5' }}
-                  onClick={() => openEditFile(r)}
+                  onClick={(e) => { e.stopPropagation(); openEditFile(r); }}
                   title="Edit file"
                 >
                   <Pencil size={13} />
@@ -333,7 +333,7 @@ export default function FilesPage() {
                 <button
                   className="btn btn-outline btn-sm"
                   style={{ padding: '5px 10px', borderColor: '#fca5a5', color: '#dc2626' }}
-                  onClick={() => setConfirmDelete(r)}
+                  onClick={(e) => { e.stopPropagation(); setConfirmDelete(r); }}
                   title="Delete file"
                 >
                   <Trash2 size={13} />
@@ -493,6 +493,12 @@ export default function FilesPage() {
             'File'
           );
         }}
+      />
+
+      {/* File Detail Drawer */}
+      <FileDetailDrawer
+        fileId={drawerFileId}
+        onClose={() => setDrawerFileId(null)}
       />
     </>
   );
