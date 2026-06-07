@@ -385,6 +385,11 @@ def get_customer_profile(
         if creator:
             creator_name = f"{creator.first_name or ''} {creator.last_name or ''}".strip()
 
+    # ── Linked system_user last login ────────────────────────────────────────
+    linked_user = None
+    if customer.email:
+        linked_user = db.query(SystemUser).filter(SystemUser.email == customer.email).first()
+
     def safe_date(d):
         if d is None:
             return None
@@ -409,6 +414,7 @@ def get_customer_profile(
         "customer_type": customer.customer_type or "individual",
         "created_at": safe_date(customer.created_at),
         "added_by": creator_name,
+        "last_login": safe_date(linked_user.last_login) if linked_user else None,
         # Activity
         "files_total": files_total,
         "files_by_status": files_by_status,

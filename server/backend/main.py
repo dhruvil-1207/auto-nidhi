@@ -24,6 +24,7 @@ from backend.routes.admin.insurance_payments import router as insurance_payments
 from backend.routes.admin.notifications import router as notifications_router
 from backend.routes.admin.modifications import router as modifications_router
 from backend.routes.admin.service_requests import router as service_requests_router
+from backend.routes.admin.analytics import router as analytics_router
 
 # Customer Routes
 from backend.routes.customer.dashboard import router as customer_dashboard_router
@@ -96,6 +97,7 @@ app.include_router(insurance_payments_router)
 app.include_router(notifications_router)
 app.include_router(modifications_router)
 app.include_router(service_requests_router)
+app.include_router(analytics_router)
 
 # Customer Dashboard
 app.include_router(customer_dashboard_router)

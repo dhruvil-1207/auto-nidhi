@@ -5,7 +5,7 @@ import {
   ArrowDownToLine, ArrowUpFromLine, BadgePercent, HandCoins,
   Receipt, ShieldCheck, Wallet, Landmark,
   Database, Settings, LogOut, Bell, PiggyBank,
-  User, ChevronDown, ClipboardList,
+  User, ChevronDown, ClipboardList, BarChart2,
 } from 'lucide-react'
 import NotificationPanel from '../../components/app/NotificationPanel'
 import { subscribe, unreadCount, fetchNotifications } from '../../store/notificationStore'
@@ -19,6 +19,7 @@ const adminNav: NavGroup[] = [
   {
     title: 'Overview', items: [
       { to: '/dashboard',  label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/analytics',  label: 'Analytics', icon: BarChart2      },
       { to: '/customers',  label: 'Customers', icon: Users },
       { to: '/files',      label: 'Files',     icon: FolderOpen },
     ],

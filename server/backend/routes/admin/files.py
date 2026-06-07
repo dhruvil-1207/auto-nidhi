@@ -7,7 +7,10 @@ from uuid import UUID
 import datetime
 
 from backend.database import get_db
-from backend.models import FileRecord, SystemUser, FinanceInfo, CustomerDocument, Customer
+from backend.models import (
+    FileRecord, SystemUser, FinanceInfo, CustomerDocument, Customer,
+    PaymentIn, PaymentOut, InsurancePayment, RTOPayment, InsuranceInfo,
+)
 from backend.utils import get_current_staff, get_current_admin, record_dashboard_event, send_targeted_notification
 
 router = APIRouter(prefix="/api/v1/files", tags=["Admin Files"])
@@ -212,6 +215,97 @@ def delete_file(
     except Exception as exc:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.get("/{file_id}/detail")
+def get_file_detail(
+    file_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: SystemUser = Depends(get_current_staff),
+):
+    """Full file detail — used by the FileDetailDrawer component on all pages."""
+    file = db.query(FileRecord).filter(
+        FileRecord.id == file_id,
+        FileRecord.is_deleted == False,
+    ).first()
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    def safe_date(d):
+        if d is None:
+            return None
+        if hasattr(d, "isoformat"):
+            return d.isoformat()
+        return str(d)
+
+    # Finance / Loan info
+    finance = file.finance_info
+    finance_data = None
+    if finance:
+        finance_data = {
+            "lan_number":     finance.lan_number,
+            "loan_amount":    float(finance.loan_amount or 0),
+            "emi_amount":     float(finance.emi_amount or 0),
+            "no_of_months":   finance.no_of_months,
+            "irr_percentage": float(finance.irr_percentage or 0),
+            "bank":           finance.bank.bank_name if finance.bank else None,
+        }
+
+    # Insurance info
+    insurance = file.insurance_info
+    insurance_data = None
+    if insurance:
+        insurance_data = {
+            "policy_number":   insurance.policy_number,
+            "valid_from":      safe_date(insurance.valid_from),
+            "valid_to":        safe_date(insurance.valid_to),
+            "premium_amount":  float(insurance.premium_amount or 0),
+            "idv_amount":      float(insurance.idv_amount or 0),
+            "company":         insurance.insurance_company.company_name if insurance.insurance_company else None,
+            "type":            insurance.insurance_type.insurance_type_name if insurance.insurance_type else None,
+        }
+
+    # Payment counts
+    pay_in_count  = db.query(PaymentIn).filter(PaymentIn.file_id == file_id).count()
+    pay_out_count = db.query(PaymentOut).filter(PaymentOut.file_id == file_id).count()
+    rto_count     = db.query(RTOPayment).filter(RTOPayment.file_id == file_id, RTOPayment.is_deleted == False).count()
+    ins_count     = db.query(InsurancePayment).filter(InsurancePayment.file_id == file_id, InsurancePayment.is_deleted == False).count()
+
+    return {
+        "id":           str(file.id),
+        "file_number":  file.file_number or "—",
+        "file_type":    file.file_type or "—",
+        "status":       file.status or "—",
+        "docket_date":  safe_date(file.docket_date),
+        "remarks":      file.remarks,
+        "created_at":   safe_date(file.created_at),
+        "updated_at":   safe_date(file.updated_at),
+        # Relations
+        "customer": {
+            "id":       str(file.customer.id) if file.customer else None,
+            "name":     file.customer.full_name if file.customer else "—",
+            "mobile":   file.customer.mobile_1 if file.customer else "—",
+            "email":    file.customer.email if file.customer else "—",
+            "type":     file.customer.customer_type if file.customer else "—",
+        },
+        "assigned_to": (
+            f"{file.assignee.first_name or ''} {file.assignee.last_name or ''}".strip()
+            if file.assignee else "Unassigned"
+        ),
+        "created_by": (
+            f"{file.creator.first_name or ''} {file.creator.last_name or ''}".strip()
+            if file.creator else "—"
+        ),
+        # Detailed data
+        "finance":   finance_data,
+        "insurance": insurance_data,
+        # Payment summary counts
+        "payment_in_count":  pay_in_count,
+        "payment_out_count": pay_out_count,
+        "rto_count":         rto_count,
+        "insurance_payment_count": ins_count,
+    }
+
 
 @router.patch("/{file_id}/documents/{document_id}/status")
 def update_document_status(

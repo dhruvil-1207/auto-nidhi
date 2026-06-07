@@ -222,6 +222,11 @@ export const filesApi = {
   remove: async (id: string) => {
     await api.delete(`/files/${id}/`, skipAuthRedirectConfig)
   },
+
+  detail: async (id: string) => {
+    const { data } = await api.get(`/files/${id}/detail`)
+    return data
+  },
 }
 
 export const paymentsInApi = {
