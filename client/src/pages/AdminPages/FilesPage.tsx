@@ -12,6 +12,7 @@ import { Pencil, Trash2, AlertTriangle } from 'lucide-react'
 import { SelectiveExportModal } from "../../components/app/SelectiveExportModal";
 import { exportDetailPDFsAsZip } from "../../utils/zipExportUtils";
 import FileDetailDrawer from "../../components/app/FileDetailDrawer";
+import Pagination from "../../components/app/Pagination";
 
 const STATUS_COLOR: Record<string, { bg: string; text: string; dot: string }> = {
   draft: { bg: '#f1f5f9', text: '#475569', dot: '#94a3b8' },
@@ -38,6 +39,9 @@ export default function FilesPage() {
   const [drawerFileId, setDrawerFileId] = useState<string | null>(null);
   const [rows, setRows] = useState<any[]>([]);
   const [filteredRows, setFilteredRows] = useState<any[]>([]);
+  const [totalRows, setTotalRows] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
   const [typeF, setTypeF] = useState("");
   const [statusF, setStatusF] = useState("");
@@ -107,12 +111,14 @@ export default function FilesPage() {
     setLoading(true);
     try {
       const response = await filesApi.list(
-        1,
-        100,
+        page,
+        pageSize,
         statusF || undefined,
         typeF || undefined
       );
       setRows(response.data);
+      setFilteredRows(response.data);
+      setTotalRows(response.total ?? response.data?.length ?? 0);
     } catch (err) {
       message.error("Failed to load files");
     } finally {
@@ -121,8 +127,12 @@ export default function FilesPage() {
   };
 
   useEffect(() => {
-    loadFiles();
+    setPage(1);
   }, [typeF, statusF]);
+
+  useEffect(() => {
+    loadFiles();
+  }, [page, pageSize, typeF, statusF]);
 
   useEffect(() => {
     if (addOpen) {
@@ -475,24 +485,60 @@ export default function FilesPage() {
         onExportExcel={exportExcel}
         onExportTable={exportPDF}
         onExportZip={async (selected) => {
+          // A6: fetch full file details for each selected file before generating ZIP
+          let enriched = selected;
+          try {
+            enriched = await Promise.all(
+              selected.map(async (r: any) => {
+                try {
+                  const detail = await filesApi.detail(r.id);
+                  return { ...r, ...detail };
+                } catch {
+                  return r; // skip enrichment for this file if fetch fails
+                }
+              })
+            );
+          } catch {
+            message.warning('Some file details could not be fetched — exporting available data');
+          }
           await exportDetailPDFsAsZip(
             `files_details_${new Date().toISOString().slice(0, 10)}`,
-            selected,
+            enriched,
             (r) => [
-              { label: 'File Sequence Number', value: r.file_number },
-              { label: 'Customer Name', value: r.customer },
-              { label: 'File Type', value: r.type ? r.type.split('_').map((part: string) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ') : '' },
-              { label: 'Status', value: formatStatus(r.status) },
-              { label: 'Bank Name', value: r.bank },
-              { label: 'Assigned User', value: r.assigned || '—' },
-              { label: 'Created Date', value: r.created },
-              { label: 'Remarks', value: r.remarks || '—' }
+              { label: 'File Sequence Number',  value: r.file_number },
+              { label: 'Customer Name',          value: r.customer_name || r.customer },
+              { label: 'Customer Mobile',        value: r.customer_mobile || '—' },
+              { label: 'File Type',              value: r.file_type || r.type ? (r.file_type || r.type).split('_').map((p: string) => p.charAt(0).toUpperCase() + p.slice(1)).join(' ') : '—' },
+              { label: 'Status',                 value: formatStatus(r.status) },
+              { label: 'Bank Name',              value: r.bank_name || r.bank },
+              { label: 'Assigned Staff',         value: r.assigned_to_name || r.assigned || '—' },
+              { label: 'Vehicle Model',          value: r.vehicle_model || '—' },
+              { label: 'Chassis Number',         value: r.chassis_number || '—' },
+              { label: 'Engine Number',          value: r.engine_number || '—' },
+              { label: 'LAN Number',             value: r.lan_number || '—' },
+              { label: 'Loan Amount',            value: r.loan_amount ? `₹${r.loan_amount}` : '—' },
+              { label: 'EMI Amount',             value: r.emi_amount ? `₹${r.emi_amount}` : '—' },
+              { label: 'Insurance Policy',       value: r.policy_number || '—' },
+              { label: 'RTO Number',             value: r.rto_number || '—' },
+              { label: 'Payment IN Total',       value: r.payment_in_total ? `₹${r.payment_in_total}` : '—' },
+              { label: 'Payment OUT Total',      value: r.payment_out_total ? `₹${r.payment_out_total}` : '—' },
+              { label: 'Remarks',                value: r.remarks || '—' },
+              { label: 'Created Date',           value: r.created },
             ],
-            (r) => `${r.file_number || 'File'}_${r.customer || ''}`,
+            (r) => `${r.file_number || 'File'}_${r.customer_name || r.customer || ''}`,
             'File Profile',
             'File'
           );
         }}
+      />
+
+      {/* A8: Pagination */}
+      <Pagination
+        total={totalRows}
+        page={page}
+        pageSize={pageSize}
+        onPage={setPage}
+        onPageSize={(s) => { setPageSize(s); setPage(1); }}
       />
 
       {/* File Detail Drawer */}

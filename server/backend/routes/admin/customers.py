@@ -56,7 +56,13 @@ def get_customer_role(db: Session) -> MasterRole:
     return role
 
 @router.get("/")
-def list_customers(page: int = 1, limit: int = 50, search: Optional[str] = None, db: Session = Depends(get_db)):
+def list_customers(
+    page: int = 1,
+    limit: int = 50,
+    search: Optional[str] = None,
+    customer_type: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
     query = db.query(
         Customer, 
         func.count(FileRecord.id).label("active_files_count")
@@ -65,6 +71,9 @@ def list_customers(page: int = 1, limit: int = 50, search: Optional[str] = None,
     if search:
         search_term = f"%{search}%"
         query = query.filter(Customer.full_name.ilike(search_term) | Customer.mobile_1.ilike(search_term))
+
+    if customer_type:
+        query = query.filter(Customer.customer_type == customer_type)
     
     total = query.count()
     results = query.order_by(Customer.created_at.desc()).offset((page - 1) * limit).limit(limit).all()
