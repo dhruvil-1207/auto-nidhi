@@ -104,10 +104,10 @@ export const dashboardApi = {
 }
 
 export const customersApi = {
-  list: async (page = 1, limit = 20, search = '') => {
+  list: async (page = 1, limit = 50, search = '', customer_type?: string) => {
     try {
       const { data } = await api.get('/customers/', {
-        params: { page, limit, search },
+        params: { page, limit, search: search || undefined, customer_type: customer_type || undefined },
       })
       return data
     } catch (err: any) {
