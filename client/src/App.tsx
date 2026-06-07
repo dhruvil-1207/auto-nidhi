@@ -61,6 +61,11 @@ const AccountantModificationsPage = lazy(() => import('./pages/AccountantPages/A
 const AdminReviewDeskPage    = lazy(() => import('./pages/AdminPages/AdminReviewDeskPage'))
 const AnalyticsPage          = lazy(() => import('./pages/AdminPages/AnalyticsPage'))
 
+const DataEntryDashboardPage = lazy(() => import('./pages/DataEntryPages/DataEntryDashboardPage'))
+const DataEntryCustomersPage = lazy(() => import('./pages/DataEntryPages/CustomersPage'))
+const DataEntryFilesPage     = lazy(() => import('./pages/DataEntryPages/FilesPage'))
+
+
 // ── Loading fallback ──────────────────────────────────────────────────
 function PageLoader() {
   return (
@@ -139,9 +144,10 @@ function App() {
 
             {/* ── Staff portal ── */}
             <Route element={<AdminLayout />}>
-              <Route path="/staff/dashboard"          element={<DashboardPage />}         />
-              <Route path="/staff/customers"          element={<CustomersPage />}         />
-              <Route path="/staff/files"              element={<FilesPage />}             />
+              <Route path="/staff/dashboard"          element={<DataEntryDashboardPage />}         />
+              <Route path="/staff/customers"          element={<DataEntryCustomersPage />}         />
+              <Route path="/staff/customers/:id"      element={<CustomerDetailPage />}             />
+              <Route path="/staff/files"              element={<DataEntryFilesPage />}             />
               <Route path="/staff/payments/in"        element={<PaymentInPage />}         />
               <Route path="/staff/payments/out"       element={<PaymentOutPage />}        />
               <Route path="/staff/rto-payments"       element={<RTOPaymentsPage />}       />
