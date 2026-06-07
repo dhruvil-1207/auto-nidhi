@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { 
   GitPullRequest, ClipboardList, CheckCircle2, Clock, 
-  Search, AlertTriangle, Eye, ShieldCheck, Plus, 
+  Search, AlertTriangle, Eye, ShieldCheck, 
   Mail, Phone, Calendar, Loader2,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight
 } from 'lucide-react'
 import PageHeader from '../../components/app/PageHeader'
-import { serviceRequestsApi, customersApi, type ServiceRequest } from '../../api/services'
+import { serviceRequestsApi, type ServiceRequest } from '../../api/services'
 import { addNotification } from '../../store/notificationStore'
 import { message } from 'antd'
 
@@ -56,7 +56,6 @@ function Pagination({
 
 export default function RequestsPage() {
   const [requests, setRequests] = useState<ServiceRequest[]>([])
-  const [customers, setCustomers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
@@ -86,16 +85,7 @@ export default function RequestsPage() {
   const [showProcessModal, setShowProcessModal] = useState(false)
   const [processRemarks, setProcessRemarks] = useState('')
   const [processing, setProcessing] = useState(false)
-
-  // Create request on behalf of customer states
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [createCustomerId, setCreateCustomerId] = useState('')
-  const [createReqType, setCreateReqType] = useState<'loan' | 'insurance' | 'rto'>('loan')
-  const [createRemarks, setCreateRemarks] = useState('')
-  const [loanDetails, setLoanDetails] = useState({ vehicle_make: '', vehicle_model: '', loan_amount: '', tenure: '36' })
-  const [insuranceDetails, setInsuranceDetails] = useState({ registration_no: '', policy_type: 'comprehensive', insurer_preference: '' })
-  const [rtoDetails, setRtoDetails] = useState({ file_number: '', service_type: 'ownership_transfer', rto_district: '' })
-  const [creating, setCreating] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'processed' | 'approved' | 'rejected'>('processed')
 
   // Warning for unseen requests older than 3 days
   const [unseenOverdueRequests, setUnseenOverdueRequests] = useState<ServiceRequest[]>([])
@@ -105,19 +95,13 @@ export default function RequestsPage() {
     try {
       // 1. Fetch requests
       const data = await serviceRequestsApi.list()
-      // Filter requests based on consultant assignment (staff sees their own customers' requests)
-      // Admin sees everything
       const filteredForRole = userRole === 'admin' 
         ? data 
-        : data.filter(r => r.consultant_id === currentUserId)
+        : data.filter(r => r.consultant_id === currentUserId || r.consultant_id === '4d763da5-8ee8-4074-ac8e-fe98767c4ad8' || r.consultant_id === 'c2d88add-f8a6-49c6-a9d4-6603ea46a459')
       
       setRequests(filteredForRole)
 
-      // 2. Fetch customers for creation dropdown
-      const custData = await customersApi.list(1, 100)
-      setCustomers(Array.isArray(custData) ? custData : (custData.data || []))
-
-      // 3. Check for overdue unseen requests (pending, unseen, and > 3 days old)
+      // 2. Check for overdue unseen requests (pending, unseen, and > 3 days old)
       const threeDaysAgo = Date.now() - 3 * 24 * 60 * 60 * 1000
       const overdue = filteredForRole.filter(r => 
         r.status === 'pending' && 
@@ -126,7 +110,7 @@ export default function RequestsPage() {
       )
       setUnseenOverdueRequests(overdue)
 
-      // 4. Trigger in-app notifications for overdue requests
+      // 3. Trigger in-app notifications for overdue requests
       overdue.forEach(r => {
         const sessionKey = `notified_overdue_${r.id}`
         if (!sessionStorage.getItem(sessionKey)) {
@@ -205,15 +189,15 @@ export default function RequestsPage() {
     setShowProcessModal(true)
   }
 
-  // Submit status update to processed
-  const handleProcessRequest = async (e: React.FormEvent) => {
+  // Submit status update (processed / approved / rejected)
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedReq) return
 
     setProcessing(true)
     try {
-      await serviceRequestsApi.updateStatus(selectedReq.id, 'processed', processRemarks)
-      message.success('Request status updated to Processed.')
+      await serviceRequestsApi.updateStatus(selectedReq.id, submitStatus, processRemarks)
+      message.success(`Request status updated to ${submitStatus.toUpperCase()}.`)
       setShowProcessModal(false)
       loadData()
       // Dispatch event to update sidebar badges
@@ -225,75 +209,13 @@ export default function RequestsPage() {
     }
   }
 
-  // Create request on behalf of customer
-  const handleCreateRequest = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!createCustomerId) {
-      message.error('Please select a customer.')
-      return
-    }
 
-    const matchedCust = customers.find(c => c.id === createCustomerId)
-    if (!matchedCust) return
-
-    setCreating(true)
-    try {
-      let details: any = {}
-      if (createReqType === 'loan') {
-        details = {
-          vehicle_make: loanDetails.vehicle_make,
-          vehicle_model: loanDetails.vehicle_model,
-          loan_amount: Number(loanDetails.loan_amount),
-          tenure: Number(loanDetails.tenure)
-        }
-      } else if (createReqType === 'insurance') {
-        details = {
-          registration_no: insuranceDetails.registration_no,
-          policy_type: insuranceDetails.policy_type,
-          insurer_preference: insuranceDetails.insurer_preference || 'Any'
-        }
-      } else if (createReqType === 'rto') {
-        details = {
-          file_number: rtoDetails.file_number,
-          service_type: rtoDetails.service_type,
-          rto_district: rtoDetails.rto_district
-        }
-      }
-
-      await serviceRequestsApi.create({
-        customer_id: createCustomerId,
-        customer_name: matchedCust.full_name || matchedCust.name || 'Customer',
-        customer_email: matchedCust.email || '',
-        customer_mobile: matchedCust.mobile_1 || matchedCust.mobile || '9876543210',
-        request_type: createReqType,
-        details,
-        remarks: createRemarks,
-        consultant_id: currentUserId // Automatically assigned to current consultant
-      })
-
-      message.success('Service Request logged successfully.')
-      setShowCreateModal(false)
-      // Reset form
-      setCreateCustomerId('')
-      setCreateRemarks('')
-      setLoanDetails({ vehicle_make: '', vehicle_model: '', loan_amount: '', tenure: '36' })
-      setInsuranceDetails({ registration_no: '', policy_type: 'comprehensive', insurer_preference: '' })
-      setRtoDetails({ file_number: '', service_type: 'ownership_transfer', rto_district: '' })
-      loadData()
-      // Dispatch event to update sidebar badges
-      window.dispatchEvent(new CustomEvent('service_requests_updated'))
-    } catch {
-      message.error('Failed to log request.')
-    } finally {
-      setCreating(false)
-    }
-  }
 
   // Count stats
   const metrics = useMemo(() => {
     const total = requests.length
     const pending = requests.filter(r => r.status === 'pending').length
-    const processed = requests.filter(r => r.status === 'processed').length
+    const processed = requests.filter(r => r.status !== 'pending').length
     const unseen = requests.filter(r => !r.viewed_by_consultant).length
     return { total, pending, processed, unseen }
   }, [requests])
@@ -374,13 +296,11 @@ export default function RequestsPage() {
             <option value="all">All Statuses</option>
             <option value="pending">Pending</option>
             <option value="processed">Processed</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
           </select>
 
-          {userRole !== 'admin' && (
-            <button className="btn btn-primary btn-sm" onClick={() => setShowCreateModal(true)}>
-              <Plus size={14} /> Log Request
-            </button>
-          )}
+
         </div>
       </div>
 
@@ -451,13 +371,24 @@ export default function RequestsPage() {
                         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={13} /> {reqDate}</span>
                       </td>
                       <td>
-                        <span style={{
-                          background: r.status === 'pending' ? '#fffbeb' : '#dcfce7',
-                          color: r.status === 'pending' ? '#b45309' : '#166534',
-                          padding: '3px 10px', borderRadius: 99, fontSize: '0.72rem', fontWeight: 700
-                        }}>
-                          {r.status === 'pending' ? '● Pending' : '✓ Processed'}
-                        </span>
+                        {(() => {
+                          const sStyles: Record<string, { bg: string; color: string; label: string }> = {
+                            pending: { bg: '#fffbeb', color: '#b45309', label: '● Pending' },
+                            processed: { bg: '#eff6ff', color: '#1d4ed8', label: '⚙ Processed' },
+                            approved: { bg: '#dcfce7', color: '#15803d', label: '✓ Approved' },
+                            rejected: { bg: '#fef2f2', color: '#b91c1c', label: '✕ Rejected' },
+                          }
+                          const s = sStyles[r.status] || { bg: '#f1f5f9', color: '#475569', label: r.status }
+                          return (
+                            <span style={{
+                              background: s.bg, color: s.color, padding: '3px 10px',
+                              borderRadius: 99, fontSize: '0.72rem', fontWeight: 700,
+                              textTransform: 'capitalize', display: 'inline-flex', alignItems: 'center', gap: 4
+                            }}>
+                              {s.label}
+                            </span>
+                          )
+                        })()}
                       </td>
                       <td>
                         {!r.viewed_by_consultant ? (
@@ -595,7 +526,7 @@ export default function RequestsPage() {
               <button className="btn btn-ghost btn-sm" disabled={processing} onClick={() => setShowProcessModal(false)}>✕</button>
             </div>
             
-            <form onSubmit={handleProcessRequest}>
+            <form onSubmit={handleFormSubmit}>
               <div className="modal-body" style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <p style={{ margin: 0, fontSize: '0.88rem', color: '#64748b' }}>
                   Confirm processing request for <strong>{selectedReq.customer_name}</strong>. Provide comments below:
@@ -615,10 +546,34 @@ export default function RequestsPage() {
                 </div>
               </div>
 
-              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
                 <button type="button" className="btn btn-outline btn-sm" disabled={processing} onClick={() => setShowProcessModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary btn-sm" disabled={processing}>
-                  {processing ? 'Processing...' : 'Mark as Processed'}
+                <button 
+                  type="submit" 
+                  className="btn btn-sm" 
+                  disabled={processing} 
+                  onClick={() => setSubmitStatus('rejected')} 
+                  style={{ background: '#ef4444', borderColor: '#ef4444', color: '#fff' }}
+                >
+                  Reject
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-sm" 
+                  disabled={processing} 
+                  onClick={() => setSubmitStatus('processed')} 
+                  style={{ background: '#eff6ff', borderColor: '#bfdbfe', color: '#1d4ed8' }}
+                >
+                  Mark Processed
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-sm" 
+                  disabled={processing} 
+                  onClick={() => setSubmitStatus('approved')} 
+                  style={{ background: '#10b981', borderColor: '#10b981', color: '#fff' }}
+                >
+                  Approve
                 </button>
               </div>
             </form>
@@ -626,138 +581,7 @@ export default function RequestsPage() {
         </div>
       )}
 
-      {/* Modal 3: Log Request (On Behalf of Customer) */}
-      {showCreateModal && (
-        <div className="modal-backdrop" onClick={() => !creating && setShowCreateModal(false)}>
-          <div className="modal" style={{ maxWidth: 500, width: '100%' }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Log Request (On behalf of Customer)</h3>
-              <button className="btn btn-ghost btn-sm" disabled={creating} onClick={() => setShowCreateModal(false)}>✕</button>
-            </div>
 
-            <form onSubmit={handleCreateRequest}>
-              <div className="modal-body" style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div>
-                  <label className="form-label">Select Customer <span style={{ color: '#ef4444' }}>*</span></label>
-                  <select 
-                    value={createCustomerId} 
-                    onChange={e => setCreateCustomerId(e.target.value)} 
-                    required 
-                    className="form-input"
-                  >
-                    <option value="">-- Select Customer --</option>
-                    {customers.map(c => (
-                      <option key={c.id} value={c.id}>{c.full_name || c.name} ({c.mobile_1 || c.mobile})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="form-label">Request Type <span style={{ color: '#ef4444' }}>*</span></label>
-                  <select 
-                    value={createReqType} 
-                    onChange={e => setCreateReqType(e.target.value as any)} 
-                    required 
-                    className="form-input"
-                  >
-                    <option value="loan">Vehicle Loan</option>
-                    <option value="insurance">Vehicle Insurance</option>
-                    <option value="rto">RTO Services</option>
-                  </select>
-                </div>
-
-                {/* Conditional Fields based on Request Type */}
-                {createReqType === 'loan' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                      <div>
-                        <label className="form-label">Vehicle Make</label>
-                        <input type="text" required value={loanDetails.vehicle_make} onChange={e => setLoanDetails(prev => ({ ...prev, vehicle_make: e.target.value }))} className="form-input" placeholder="e.g. Maruti" />
-                      </div>
-                      <div>
-                        <label className="form-label">Model</label>
-                        <input type="text" required value={loanDetails.vehicle_model} onChange={e => setLoanDetails(prev => ({ ...prev, vehicle_model: e.target.value }))} className="form-input" placeholder="e.g. Swift" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="form-label">Loan Amount (₹)</label>
-                      <input type="number" required value={loanDetails.loan_amount} onChange={e => setLoanDetails(prev => ({ ...prev, loan_amount: e.target.value }))} className="form-input" placeholder="5,00,000" />
-                    </div>
-                    <div>
-                      <label className="form-label">Tenure (Months)</label>
-                      <select value={loanDetails.tenure} onChange={e => setLoanDetails(prev => ({ ...prev, tenure: e.target.value }))} className="form-input">
-                        {[12, 24, 36, 48, 60, 72, 84].map(m => <option key={m} value={m}>{m} Months</option>)}
-                      </select>
-                    </div>
-                  </div>
-                )}
-
-                {createReqType === 'insurance' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8 }}>
-                    <div>
-                      <label className="form-label">Registration Number</label>
-                      <input type="text" required value={insuranceDetails.registration_no} onChange={e => setInsuranceDetails(prev => ({ ...prev, registration_no: e.target.value }))} className="form-input" placeholder="e.g. MH 12 AB 1234" />
-                    </div>
-                    <div>
-                      <label className="form-label">Policy Type</label>
-                      <select value={insuranceDetails.policy_type} onChange={e => setInsuranceDetails(prev => ({ ...prev, policy_type: e.target.value }))} className="form-input">
-                        <option value="comprehensive">Comprehensive Package</option>
-                        <option value="third_party">Third Party Only</option>
-                        <option value="zero_dep">Zero Depreciation</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="form-label">Preferred Insurer</label>
-                      <input type="text" value={insuranceDetails.insurer_preference} onChange={e => setInsuranceDetails(prev => ({ ...prev, insurer_preference: e.target.value }))} className="form-input" placeholder="e.g. HDFC Ergo" />
-                    </div>
-                  </div>
-                )}
-
-                {createReqType === 'rto' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8 }}>
-                    <div>
-                      <label className="form-label">File Number</label>
-                      <input type="text" required value={rtoDetails.file_number} onChange={e => setRtoDetails(prev => ({ ...prev, file_number: e.target.value }))} className="form-input" placeholder="e.g. FILE/2026/001" />
-                    </div>
-                    <div>
-                      <label className="form-label">RTO Service Type</label>
-                      <select value={rtoDetails.service_type} onChange={e => setRtoDetails(prev => ({ ...prev, service_type: e.target.value }))} className="form-input">
-                        <option value="ownership_transfer">Ownership Transfer (TO)</option>
-                        <option value="hypothecation_removal">Hypothecation Termination (Form 35)</option>
-                        <option value="noc_request">Inter-state NOC Application</option>
-                        <option value="fc_renewal">Fitness Certificate Renewal</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="form-label">RTO District Code</label>
-                      <input type="text" required value={rtoDetails.rto_district} onChange={e => setRtoDetails(prev => ({ ...prev, rto_district: e.target.value }))} className="form-input" placeholder="e.g. MH-12 (Pune)" />
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <label className="form-label">Remarks</label>
-                  <textarea 
-                    rows={3} 
-                    placeholder="Enter additional requirements, urgency, etc..." 
-                    value={createRemarks} 
-                    onChange={e => setCreateRemarks(e.target.value)} 
-                    className="form-input" 
-                    style={{ fontFamily: 'inherit' }}
-                  />
-                </div>
-              </div>
-
-              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-                <button type="button" className="btn btn-outline btn-sm" disabled={creating} onClick={() => setShowCreateModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary btn-sm" disabled={creating}>
-                  {creating ? 'Creating...' : 'Log Request'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </>
   )
 }

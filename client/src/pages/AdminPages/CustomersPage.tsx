@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, X, FileSpreadsheet, FileDown, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { Eye, X, FileSpreadsheet, FileDown, Pencil, Trash2, AlertTriangle, ChevronRight } from "lucide-react";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -11,6 +11,7 @@ import { customersApi } from "../../api/services";
 import { message } from 'antd';
 import { SelectiveExportModal } from "../../components/app/SelectiveExportModal";
 import { exportDetailPDFsAsZip } from "../../utils/zipExportUtils";
+import Pagination from "../../components/app/Pagination";
 
 const normalizeCustomer = (customer: any) => ({
   id: customer.id,
@@ -47,6 +48,9 @@ const emptyForm = () => ({
 export default function CustomersPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState<any[]>([]);
+  const [totalRows, setTotalRows] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [open, setOpen] = useState(false);
   const [viewCustomer, setViewCustomer] = useState<any>(null);
   const [editCustomer, setEditCustomer] = useState<any>(null);
@@ -57,26 +61,15 @@ export default function CustomersPage() {
   const [form, setForm] = useState(emptyForm());
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<'' | 'individual' | 'business'>('');
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [confirmDeactivate, setConfirmDeactivate] = useState<any>(null);
   const role = localStorage.getItem('user_role') || 'guest';
   const isAdmin = role === 'admin';
   const [exportMode, setExportMode] = useState<'pdf' | 'excel'>('pdf');
 
-  const filteredRows = useMemo(() => {
-    if (!search.trim()) return rows;
-    const q = search.toLowerCase();
-    return rows.filter((r) => {
-      return (
-        String(r.name ?? "").toLowerCase().includes(q) ||
-        String(r.mobile ?? "").toLowerCase().includes(q) ||
-        String(r.city ?? "").toLowerCase().includes(q) ||
-        String(r.state ?? "").toLowerCase().includes(q) ||
-        String(r.email ?? "").toLowerCase().includes(q) ||
-        String(r.aadhar ?? "").toLowerCase().includes(q)
-      );
-    });
-  }, [rows, search]);
+  // filteredRows for export (all loaded rows, no extra client-side filter needed)
+  const filteredRows = rows;
 
   const exportExcel = (itemsToExport?: any[]) => {
     const list = itemsToExport || filteredRows;
@@ -141,9 +134,14 @@ export default function CustomersPage() {
     setLoading(true);
     setError("");
     try {
-      const data = await customersApi.list();
+      const data = await customersApi.list(page, pageSize, search, typeFilter || undefined);
       if (Array.isArray(data)) {
         setRows(data.map(normalizeCustomer));
+        // Backend returns array only — total from header or length
+        setTotalRows(data.length < pageSize ? (page - 1) * pageSize + data.length : page * pageSize + 1);
+      } else if (data && Array.isArray(data.data)) {
+        setRows(data.data.map(normalizeCustomer));
+        setTotalRows(data.total ?? data.data.length);
       } else {
         throw new Error("Unexpected response format");
       }
@@ -156,7 +154,11 @@ export default function CustomersPage() {
 
   useEffect(() => {
     loadCustomers();
-  }, []);
+  }, [page, pageSize, search, typeFilter]);
+
+  // Reset page when filters change
+  const handleSearch = (val: string) => { setSearch(val); setPage(1); };
+  const handleTypeFilter = (val: '' | 'individual' | 'business') => { setTypeFilter(val); setPage(1); };
 
   const updateForm = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -313,14 +315,35 @@ export default function CustomersPage() {
       {loading ? (
         <div style={{ padding: "40px 0", textAlign: "center", color: "var(--gray-400)", fontWeight: 500 }}>Loading customer pipeline directory...</div>
       ) : (
-        <DataTable
-          rows={rows}
-          search={search}
-          onSearchChange={setSearch}
-          searchKeys={["name", "mobile", "city", "state", "email", "aadhar"]}
-          onAdd={() => setOpen(true)}
-          addLabel="New customer"
-          rightSlot={
+        <>
+          {/* Customer Type Filter Tabs — A5 */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+            {(['', 'individual', 'business'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => handleTypeFilter(t)}
+                style={{
+                  padding: '5px 14px', borderRadius: 99, fontSize: '.8rem', fontWeight: 600,
+                  border: '1px solid',
+                  borderColor: typeFilter === t ? 'var(--brand-500)' : 'var(--gray-200)',
+                  background: typeFilter === t ? 'var(--brand-600)' : '#fff',
+                  color: typeFilter === t ? '#fff' : 'var(--gray-600)',
+                  cursor: 'pointer',
+                }}
+              >
+                {t === '' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          <DataTable
+            rows={rows}
+            search={search}
+            onSearchChange={handleSearch}
+            searchKeys={["name", "mobile", "city", "state", "email", "aadhar"]}
+            onAdd={() => setOpen(true)}
+            addLabel="New customer"
+            rightSlot={
             <>
               <button
                 type="button"
@@ -388,9 +411,17 @@ export default function CustomersPage() {
                     className="btn btn-outline btn-sm"
                     style={{ padding: '5px 10px' }}
                     onClick={() => setViewCustomer(r.raw)}
-                    title="View details"
+                    title="Quick view"
                   >
                     <Eye size={13} />
+                  </button>
+                  <button
+                    className="btn btn-sm"
+                    style={{ padding: '5px 10px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                    onClick={() => navigate(`/customers/${r.id}`)}
+                    title="View full profile"
+                  >
+                    Profile <ChevronRight size={12} />
                   </button>
                   <button
                     className="btn btn-outline btn-sm"
@@ -414,7 +445,16 @@ export default function CustomersPage() {
               )
             }
           ]}
-        />
+          />
+          {/* A8: Pagination */}
+          <Pagination
+            total={totalRows}
+            page={page}
+            pageSize={pageSize}
+            onPage={setPage}
+            onPageSize={(s) => { setPageSize(s); setPage(1); }}
+          />
+        </>
       )}
 
       {/* Deactivate Confirm Modal */}
