@@ -4,7 +4,7 @@ import {
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RotateCcw,
   FileSpreadsheet, FileDown, CalendarClock,
 } from 'lucide-react'
-import { message, Select } from 'antd'
+import { message } from 'antd'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -84,7 +84,7 @@ export default function CommissionOutPage() {
   const [viewRow, setViewRow] = useState<CommissionOut | null>(null)
   const [exportModalOpen, setExportModalOpen] = useState(false)
   const [exportMode, setExportMode] = useState<'pdf' | 'excel'>('pdf')
-  const [exportRows, setExportRows] = useState<CommissionOut[]>([])
+  const [_exportRows, _setExportRows] = useState<CommissionOut[]>([])
   const [editRow, setEditRow] = useState<CommissionOut | null>(null)
   const [editForm, setEditForm] = useState({ ...EMPTY_FORM })
   const [form, setForm] = useState({ ...EMPTY_FORM })

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import {
-  TrendingDown, IndianRupee, CalendarClock, Plus, X, Eye, Pencil,
+  TrendingDown, IndianRupee, CalendarClock, Plus, Eye, Pencil,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, RotateCcw,
   FileSpreadsheet, FileDown,
 } from 'lucide-react'
@@ -152,7 +152,7 @@ export default function CommissionInPage() {
   useEffect(() => { bankAccountsApi.list(1, 200).then(res => { setCompanyBanks((res.data || []).map((b: any) => ({ id: b.id, label: `${b.bank_name} – ${b.account_number}` }))) }).catch(() => {}) }, [])
   useEffect(() => { if (showAdd) loadFilesDropdown() }, [showAdd])
 
-  function updateForm(field: string, value: unknown) { setForm((prev) => ({ ...prev, [field]: value })); if (errors[field]) setErrors((e) => { const n = { ...e }; delete n[field]; return n }) }
+  function _updateForm(field: string, value: unknown) { setForm((prev) => ({ ...prev, [field]: value })); if (errors[field]) setErrors((e) => { const n = { ...e }; delete n[field]; return n }) }
 
   function validate() {
     const e: Record<string, string> = {}
@@ -168,7 +168,7 @@ export default function CommissionInPage() {
     return Object.keys(e).length === 0
   }
 
-  async function handleAdd() {
+  async function _handleAdd() {
     if (!validate()) return
     const payload = {
       file_id: form.file_number,
@@ -192,7 +192,7 @@ export default function CommissionInPage() {
 
   function openEdit(r: CommissionIn) { setEditRow(r); setEditForm({ file_number: r.file_id || '', source_type: r.source_type || 'Bank', source_name: r.source_name || '', amount: String(r.amount || ''), advance: r.advance || false, tds_tracked: r.tds_deducted || false, mode: r.mode || 'UPI', payment_date: r.payment_date || new Date().toISOString().slice(0, 10), company_bank_id: r.company_bank_id || '', cheque_bank_name: r.cheque_bank_name || '', branch_name: r.branch_name || '', cheque_no: r.cheque_no || '', cheque_date: r.cheque_date || '', utr_no: r.utr_no || '', remarks: r.remarks || '' }) }
 
-  async function handleEdit() { if (!editRow) return; const payload: any = { source_type: editForm.source_type, source_name: editForm.source_name, amount: Number(editForm.amount), advance: editForm.advance, tds_deducted: editForm.tds_tracked, mode: editForm.mode, payment_date: editForm.payment_date, company_bank_id: editForm.company_bank_id || null, cheque_bank_name: editForm.cheque_bank_name || null, branch_name: editForm.branch_name || null, cheque_no: editForm.cheque_no || null, cheque_date: editForm.cheque_date || null, utr_no: editForm.utr_no || null, remarks: editForm.remarks || null }
+  async function _handleEdit() { if (!editRow) return; const payload: any = { source_type: editForm.source_type, source_name: editForm.source_name, amount: Number(editForm.amount), advance: editForm.advance, tds_deducted: editForm.tds_tracked, mode: editForm.mode, payment_date: editForm.payment_date, company_bank_id: editForm.company_bank_id || null, cheque_bank_name: editForm.cheque_bank_name || null, branch_name: editForm.branch_name || null, cheque_no: editForm.cheque_no || null, cheque_date: editForm.cheque_date || null, utr_no: editForm.utr_no || null, remarks: editForm.remarks || null }
     try { await commissionsInApi.update(editRow.id, payload); message.success('Commission updated'); setEditRow(null); loadCommissions() } catch (err: any) { message.error(err.response?.data?.detail || 'Failed to update') }
   }
 
@@ -227,7 +227,7 @@ export default function CommissionInPage() {
 
   const hasFilters = search || filterType || filterMode || filterDateFrom || filterDateTo
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
-  const safePage = Math.min(page, totalPages)
+  const _safePage = Math.min(page, totalPages)
 
   return (
     <>
