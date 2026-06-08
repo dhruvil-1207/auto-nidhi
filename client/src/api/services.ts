@@ -460,8 +460,10 @@ export const rolesApi = {
 }
 
 export const usersSettingsApi = {
-  list: async (page = 1, limit = 50, search = '') => {
-    const { data } = await api.get('/settings/users', { params: { page, limit, search: search || undefined } })
+  list: async (page = 1, limit = 50, search = '', statusFilter = 'all') => {
+    const { data } = await api.get('/settings/users', { 
+      params: { page, limit, search: search || undefined, status_filter: statusFilter } 
+    })
     return data
   },
   create: async (payload: Record<string, any>) => {
@@ -480,6 +482,13 @@ export const usersSettingsApi = {
     const { data } = await api.patch(`/settings/users/${id}/reset-password`, { new_password: newPassword }, skipAuthRedirectConfig)
     return data
   },
+  remove: async (id: string, reason?: string) => {
+    const { data } = await api.delete(`/settings/users/${id}`, {
+      ...skipAuthRedirectConfig,
+      params: { reason }
+    })     
+    return data
+  }
 }
 
 export const financeBanksApi = {
