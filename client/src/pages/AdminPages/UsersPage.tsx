@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { message } from 'antd'
 import {
-  Plus, X, Pencil, PowerOff, Power,
+  Plus, X, Pencil, PowerOff, Power, Trash2,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  RotateCcw, Eye, EyeOff, KeyRound,
+  RotateCcw, Eye, EyeOff, KeyRound, UserX
 } from 'lucide-react'
 import PageHeader from '../../components/app/PageHeader'
 import { usersSettingsApi, rolesApi } from '../../api/services'
@@ -19,8 +19,10 @@ interface SystemUser {
   role_id: string | null
   role_name: string | null
   is_active: boolean
+  is_deleted: boolean
   last_login: string | null
   created_at: string | null
+  deleted_at: string | null
 }
 
 interface Role {
@@ -80,7 +82,8 @@ function RoleBadge({ name }: { name: string | null }) {
   )
 }
 
-function StatusBadge({ active }: { active: boolean }) {
+function StatusBadge({ active, deleted }: { active: boolean, deleted: boolean }) {
+  if (deleted) return <span style={{ background: '#f3f4f6', color: '#4b5563', padding: '3px 10px', borderRadius: 99, fontSize: '.74rem', fontWeight: 700 }}>● Deleted</span>
   return active
     ? <span style={{ background: '#f0fdf4', color: '#15803d', padding: '3px 10px', borderRadius: 99, fontSize: '.74rem', fontWeight: 700 }}>● Active</span>
     : <span style={{ background: '#fef2f2', color: '#b91c1c', padding: '3px 10px', borderRadius: 99, fontSize: '.74rem', fontWeight: 700 }}>○ Inactive</span>
@@ -131,9 +134,11 @@ export default function UsersPage() {
   const [rows, setRows] = useState<SystemUser[]>([])
   const [totalRows, setTotalRows] = useState(0)
   const [roles, setRoles] = useState<Role[]>([])
+  
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(5)
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
 
   // Create modal
   const [showCreate, setShowCreate] = useState(false)
@@ -154,14 +159,17 @@ export default function UsersPage() {
   const [showResetPw, setShowResetPw] = useState(false)
   const [savingReset, setSavingReset] = useState(false)
 
-  // Toggle loading
+  // Toggling & Deleting
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [deleteId, setDeleteId] = useState<SystemUser | null>(null)
+  const [deleteReason, setDeleteReason] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   // ── Load ──────────────────────────────────────────────────────────────────
 
   async function loadUsers() {
     try {
-      const res = await usersSettingsApi.list(page, pageSize, search)
+      const res = await usersSettingsApi.list(page, pageSize, search, statusFilter)
       setRows(res.data || [])
       setTotalRows(res.total || 0)
     } catch {
@@ -179,7 +187,7 @@ export default function UsersPage() {
   }
 
   useEffect(() => { loadRoles() }, [])
-  useEffect(() => { loadUsers() }, [page, pageSize, search])
+  useEffect(() => { loadUsers() }, [page, pageSize, search, statusFilter])
 
   // ── Create form ───────────────────────────────────────────────────────────
 
@@ -302,7 +310,7 @@ export default function UsersPage() {
     }
   }
 
-  // ── Toggle active ─────────────────────────────────────────────────────────
+  // ── Toggle / Delete ───────────────────────────────────────────────────────
 
   async function handleToggleActive(u: SystemUser) {
     setTogglingId(u.id)
@@ -314,6 +322,23 @@ export default function UsersPage() {
       message.error('Failed to update user status')
     } finally {
       setTogglingId(null)
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteId) return
+    setDeleting(true)
+    try {
+      await usersSettingsApi.remove(deleteId.id, deleteReason.trim() || undefined)
+      message.success('User removed successfully')
+      setDeleteId(null)
+      setDeleteReason('')
+      loadUsers()
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail
+      message.error(typeof detail === 'string' ? detail : 'Cannot remove this user.')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -336,11 +361,27 @@ export default function UsersPage() {
             onChange={e => { setSearch(e.target.value); setPage(1) }}
           />
         </div>
-        {search && (
-          <button className="pay-filter-reset" onClick={() => { setSearch(''); setPage(1) }}>
+        
+        <div className="pay-filter-group">
+          <span className="pay-filter-label">Status</span>
+          <select
+            className="pay-filter-input"
+            value={statusFilter}
+            onChange={e => { setStatusFilter(e.target.value); setPage(1) }}
+          >
+            <option value="all">All Active & Inactive</option>
+            <option value="active">Active Only</option>
+            <option value="inactive">Inactive Only</option>
+            <option value="deleted">Deleted Users</option>
+          </select>
+        </div>
+
+        {(search || statusFilter !== 'all') && (
+          <button className="pay-filter-reset" onClick={() => { setSearch(''); setStatusFilter('all'); setPage(1) }}>
             <RotateCcw size={13} style={{ marginRight: 4 }} />Reset
           </button>
         )}
+        
         <button
           id="users-invite-btn"
           className="btn btn-primary btn-sm"
@@ -355,7 +396,7 @@ export default function UsersPage() {
       <div className="data-card">
         {rows.length === 0 ? (
           <div className="data-empty">
-            {search ? 'No users match your search.' : 'No users found. Click "Invite User" to add the first one.'}
+            {search || statusFilter !== 'all' ? 'No users match your filters.' : 'No users found. Click "Create User" to add the first one.'}
           </div>
         ) : (
           <>
@@ -375,7 +416,7 @@ export default function UsersPage() {
                 </thead>
                 <tbody>
                   {rows.map((u, i) => (
-                    <tr key={u.id}>
+                    <tr key={u.id} style={{ opacity: u.is_deleted ? 0.6 : 1 }}>
                       <td style={{ color: 'var(--gray-400)', fontSize: '.8rem' }}>
                         {(page - 1) * pageSize + i + 1}
                       </td>
@@ -383,14 +424,14 @@ export default function UsersPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <div style={{
                             width: 34, height: 34, borderRadius: '50%',
-                            background: 'linear-gradient(135deg, var(--brand-500), var(--brand-700))',
+                            background: u.is_deleted ? 'var(--gray-200)' : 'linear-gradient(135deg, var(--brand-500), var(--brand-700))',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: '#fff', fontWeight: 700, fontSize: '.86rem', flexShrink: 0,
+                            color: u.is_deleted ? 'var(--gray-500)' : '#fff', fontWeight: 700, fontSize: '.86rem', flexShrink: 0,
                           }}>
                             {u.first_name[0]?.toUpperCase()}{u.last_name?.[0]?.toUpperCase() || ''}
                           </div>
                           <div>
-                            <div style={{ fontWeight: 600, color: 'var(--gray-800)', fontSize: '.9rem' }}>
+                            <div style={{ fontWeight: 600, color: 'var(--gray-800)', fontSize: '.9rem', textDecoration: u.is_deleted ? 'line-through' : 'none' }}>
                               {u.first_name} {u.last_name || ''}
                             </div>
                             <div style={{ fontSize: '.74rem', color: 'var(--gray-400)' }}>
@@ -402,14 +443,15 @@ export default function UsersPage() {
                       <td style={{ fontSize: '.84rem', color: 'var(--gray-600)' }}>{u.email}</td>
                       <td style={{ fontSize: '.84rem', color: 'var(--gray-500)' }}>{u.phone_number || '—'}</td>
                       <td><RoleBadge name={u.role_name} /></td>
-                      <td><StatusBadge active={u.is_active} /></td>
+                      <td><StatusBadge active={u.is_active} deleted={u.is_deleted} /></td>
                       <td style={{ fontSize: '.8rem', color: 'var(--gray-400)' }}>{timeLabel(u.last_login)}</td>
                       <td>
                         <div style={{ display: 'flex', gap: 6 }}>
                           <button
                             className="btn btn-outline btn-sm"
                             style={{ padding: '5px 10px' }}
-                            title="Edit user"
+                            title={u.is_deleted ? "Cannot edit deleted user" : "Edit user"}
+                            disabled={u.is_deleted}
                             onClick={() => openEdit(u)}
                           >
                             <Pencil size={13} />
@@ -418,16 +460,27 @@ export default function UsersPage() {
                             className="btn btn-sm"
                             style={{
                               padding: '5px 10px',
-                              background: u.is_active ? '#fef2f2' : '#f0fdf4',
-                              color: u.is_active ? '#b91c1c' : '#15803d',
-                              border: `1px solid ${u.is_active ? '#fca5a5' : '#86efac'}`,
+                              background: u.is_active && !u.is_deleted ? '#fef2f2' : '#f0fdf4',
+                              color: u.is_active && !u.is_deleted ? '#b91c1c' : '#15803d',
+                              border: `1px solid ${u.is_active && !u.is_deleted ? '#fca5a5' : '#86efac'}`,
                             }}
-                            title={u.is_active ? 'Deactivate user' : 'Activate user'}
-                            disabled={togglingId === u.id}
+                            title={u.is_deleted ? "Cannot activate deleted user" : (u.is_active ? 'Deactivate user' : 'Activate user')}
+                            disabled={togglingId === u.id || u.is_deleted}
                             onClick={() => handleToggleActive(u)}
                           >
-                            {u.is_active ? <PowerOff size={13} /> : <Power size={13} />}
+                            {u.is_active && !u.is_deleted ? <PowerOff size={13} /> : <Power size={13} />}
                           </button>
+                          
+                          {!u.is_deleted && (
+                            <button
+                              className="btn btn-sm"
+                              style={{ padding: '5px 10px', background: '#fef2f2', color: '#b91c1c', border: '1px solid #fca5a5' }}
+                              title="Delete user"
+                              onClick={() => setDeleteId(u)}
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -723,6 +776,53 @@ export default function UsersPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Remove Confirmation Modal (Soft Delete) ── */}
+      {deleteId && (
+        <div className="modal-backdrop" onClick={() => setDeleteId(null)}>
+          <div className="modal" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626' }}>
+                <UserX size={18} />
+                <h3 style={{ margin: 0, color: 'inherit' }}>Remove User</h3>
+              </div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setDeleteId(null)}><X size={16} /></button>
+            </div>
+            <div className="modal-body">
+              <p style={{ color: 'var(--gray-600)', lineHeight: 1.6, margin: 0 }}>
+                Are you sure you want to remove the user account for <strong>{deleteId.first_name} {deleteId.last_name || ''}</strong>?
+                <br /><br />
+                This will safely deactivate the user and block them from logging in. Any historical records (Files, Payments, Customers) created by this user will remain intact.
+              </p>
+              
+              <div className="form-group" style={{ marginTop: 20 }}>
+                <label className="form-label">Reason for Deletion (Optional)</label>
+                <textarea
+                  className="form-input"
+                  rows={2}
+                  placeholder="e.g., Left the company, Duplicate account..."
+                  value={deleteReason}
+                  onChange={e => setDeleteReason(e.target.value)}
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline btn-sm" onClick={() => { setDeleteId(null); setDeleteReason(''); }}>Cancel</button>
+              <button
+                id="user-delete-confirm-btn"
+                className="btn btn-sm"
+                style={{ background: '#dc2626', color: '#fff', border: 'none' }}
+                disabled={deleting}
+                onClick={handleDelete}
+              >
+                <Trash2 size={14} style={{ marginRight: 6 }}/>
+                {deleting ? 'Removing…' : 'Yes, Remove User'}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -15,7 +15,6 @@ from backend.utils import get_current_admin, get_password_hash, record_dashboard
 
 router = APIRouter(prefix="/api/v1/settings", tags=["Settings - Users"])
 
-
 # ── Pydantic Schemas ────────────────────────────────────────────────────────
 
 class UserCreate(BaseModel):
@@ -72,7 +71,6 @@ class UserUpdate(BaseModel):
                 raise ValueError("First name cannot be empty")
         return v
 
-
 # ── Helper: serialize user row ──────────────────────────────────────────────
 
 def _serialize(u: SystemUser, role_name: Optional[str] = None) -> dict:
@@ -85,10 +83,11 @@ def _serialize(u: SystemUser, role_name: Optional[str] = None) -> dict:
         "role_id": str(u.role_id) if u.role_id else None,
         "role_name": role_name or (u.role.role_name if u.role else None),
         "is_active": u.is_active,
+        "is_deleted": getattr(u, "is_deleted", False),
         "last_login": u.last_login.isoformat() if hasattr(u, "last_login") and u.last_login else None,
         "created_at": u.created_at.isoformat() if hasattr(u.created_at, "isoformat") else str(u.created_at) if u.created_at else None,
+        "deleted_at": getattr(u, "deleted_at").isoformat() if hasattr(u, "deleted_at") and getattr(u, "deleted_at") else None,
     }
-
 
 # ── Routes ──────────────────────────────────────────────────────────────────
 
@@ -104,10 +103,21 @@ def list_users(
     page: int = 1,
     limit: int = 50,
     search: Optional[str] = None,
+    status_filter: Optional[str] = "all",
     db: Session = Depends(get_db),
 ):
     """List all system users with their role names."""
     query = db.query(SystemUser).outerjoin(MasterRole, SystemUser.role_id == MasterRole.id)
+
+    # Apply soft-delete and status filters
+    if status_filter == "deleted":
+        query = query.filter(SystemUser.is_deleted == True)
+    else:
+        query = query.filter(SystemUser.is_deleted == False)
+        if status_filter == "active":
+            query = query.filter(SystemUser.is_active == True)
+        elif status_filter == "inactive":
+            query = query.filter(SystemUser.is_active == False)
 
     if search:
         term = f"%{search}%"
@@ -226,7 +236,7 @@ def update_user(
     current_admin: SystemUser = Depends(get_current_admin),
 ):
     """Update user profile — name, email, phone, role, or active status."""
-    user = db.query(SystemUser).filter(SystemUser.id == user_id).first()
+    user = db.query(SystemUser).filter(SystemUser.id == user_id, SystemUser.is_deleted == False).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -288,7 +298,7 @@ def toggle_user_active(
     current_admin: SystemUser = Depends(get_current_admin),
 ):
     """Toggle a user's active/inactive status."""
-    user = db.query(SystemUser).filter(SystemUser.id == user_id).first()
+    user = db.query(SystemUser).filter(SystemUser.id == user_id, SystemUser.is_deleted == False).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -314,6 +324,49 @@ def toggle_user_active(
         raise HTTPException(status_code=400, detail=str(exc))
 
 
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(
+    user_id: UUID,
+    reason: Optional[str] = None,  # <-- Added query parameter
+    db: Session = Depends(get_db),
+    current_admin: SystemUser = Depends(get_current_admin),
+):
+    """Soft delete a system user."""
+    user = db.query(SystemUser).filter(SystemUser.id == user_id, SystemUser.is_deleted == False).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Prevent admin from deleting themselves
+    if user.id == current_admin.id:
+        raise HTTPException(status_code=400, detail="You cannot delete your own account.")
+
+    old_values = _serialize(user)
+    
+    user.is_deleted = True
+    user.is_active = False # Safely deactivate them as well
+    user.deleted_at = datetime.now(timezone.utc)
+    
+    # Save the reason
+    if hasattr(user, 'deletion_reason'):
+        user.deletion_reason = reason
+
+    try:
+        record_dashboard_event(
+            db,
+            current_admin,
+            action="deleted user",
+            table_name="system_user",
+            record_id=user.id,
+            message=f"User {user.email} was removed. Reason: {reason or 'Not provided'}", # <-- Log reason
+            preference_key="deleted",
+            old_values=old_values,
+        )
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Cannot remove this user.")
+
+
 # ── Admin Password Reset ────────────────────────────────────────────────────
 
 class AdminResetPassword(BaseModel):
@@ -325,7 +378,6 @@ class AdminResetPassword(BaseModel):
             raise ValueError("Password must be at least 6 characters")
         return v
 
-
 @router.patch("/users/{user_id}/reset-password")
 def admin_reset_password(
     user_id: UUID,
@@ -333,8 +385,8 @@ def admin_reset_password(
     db: Session = Depends(get_db),
     current_admin: SystemUser = Depends(get_current_admin),
 ):
-    """Admin resets a user's password (no old password needed)."""
-    user = db.query(SystemUser).filter(SystemUser.id == user_id).first()
+    """Admin resets a user's password."""
+    user = db.query(SystemUser).filter(SystemUser.id == user_id, SystemUser.is_deleted == False).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -350,7 +402,6 @@ def admin_reset_password(
             message=f"Password was reset for {user.email}",
             preference_key="updated",
         )
-        
         db.commit()
 
         frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
@@ -366,20 +417,14 @@ def admin_reset_password(
 
         Important:
         This is a temporary password. Please change it within 7 days.
-        If you do not change it within 7 days, this password will expire and you will need to contact the administrator.
 
         Regards,
         Auto Nidhi Team
         """
-
         try:
-            send_email(
-                to_email=user.email,
-                subject="Your Auto Nidhi password has been reset",
-                body=email_body,
-            )
-        except Exception as exc:
-            print(f"Failed to send password reset credentials email: {exc}")
+            send_email(to_email=user.email, subject="Your Auto Nidhi password has been reset", body=email_body)
+        except Exception:
+            pass
 
         return {"message": f"Password reset successfully for {user.email}"}
 
