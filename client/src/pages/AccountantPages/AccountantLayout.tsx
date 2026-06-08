@@ -6,6 +6,8 @@ import {
   LogOut, BellRing, Settings
 } from 'lucide-react'
 import logoDark from '../../assets/AutoNidhi Logo 1.png'
+import NotificationPanel from '../../components/app/NotificationPanel'
+import { unreadCount, subscribe, fetchNotifications } from '../../store/notificationStore'
 
 interface NavItem { to: string; label: string; icon: React.ComponentType<any> }
 interface NavGroup { title: string; items: NavItem[] }
@@ -40,6 +42,8 @@ const accountantNav: NavGroup[] = [
 export default function AccountantLayout() {
   const navigate = useNavigate()
   const [userName, setUserName] = useState('Accountant')
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [notifCount, setNotifCount] = useState(0)
 
   useEffect(() => {
     const role = localStorage.getItem('user_role') || ''
@@ -55,7 +59,14 @@ export default function AccountantLayout() {
 
     if (!localStorage.getItem('access_token') || role.toLowerCase() !== 'accountant') {
       navigate('/login', { replace: true })
+      return
     }
+
+    fetchNotifications()
+    const unsubscribe = subscribe(() => {
+      setNotifCount(unreadCount())
+    })
+    return () => unsubscribe()
   }, [navigate])
 
   const handleLogout = () => {
@@ -101,7 +112,27 @@ export default function AccountantLayout() {
         <header className="app-topbar">
           <h1>Accountant Portal</h1>
           <div className="app-user">
-            <BellRing size={18} color="#64748b" />
+            <div style={{ position: 'relative' }}>
+              <button
+                id="notif-bell-btn"
+                className="btn btn-ghost"
+                style={{ padding: 8, position: 'relative', display: 'flex', alignItems: 'center' }}
+                onClick={() => setNotifOpen(p => !p)}
+              >
+                <BellRing size={18} color="#64748b" />
+                {notifCount > 0 && (
+                  <span style={{
+                    position: 'absolute', top: 4, right: 6,
+                    background: '#ef4444', color: '#fff', fontSize: '0.65rem',
+                    fontWeight: 700, padding: '2px 5px', borderRadius: 10,
+                    lineHeight: 1, minWidth: 16, textAlign: 'center'
+                  }}>
+                    {notifCount > 99 ? '99+' : notifCount}
+                  </span>
+                )}
+              </button>
+              {notifOpen && <NotificationPanel onClose={() => setNotifOpen(false)} />}
+            </div>
             <div className="app-avatar">{userName.slice(0, 1).toUpperCase()}</div>
             <button className="btn btn-ghost btn-sm" onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <LogOut size={14} /> Logout

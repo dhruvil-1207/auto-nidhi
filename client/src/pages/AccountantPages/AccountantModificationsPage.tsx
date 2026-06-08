@@ -16,10 +16,10 @@ interface ModificationRequest {
 export default function AccountantModificationsPage() {
   const [requests, setRequests] = useState<ModificationRequest[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  // Form states scoped for ledger data targets
   const [entityType, setEntityType] = useState('payment_in_ledger')
   const [entityId, setEntityId] = useState('')
   const [requestType, setRequestType] = useState('update')
@@ -27,28 +27,13 @@ export default function AccountantModificationsPage() {
 
   const loadRequests = async () => {
     setLoading(true)
+    setError(null)
     try {
-      // 🔌 Querying accountant verification lanes
-      const res = await api.get('/customer/modifications')
+      const res = await api.get('/api/v1/modifications/my-requests')
       setRequests(res.data || [])
-    } catch (err) {
-      console.warn('Failed to sync financial override queues, using local fallback:', err)
-      const raw = localStorage.getItem('modification_requests')
-      if (raw) {
-        const allReqs = JSON.parse(raw)
-        const accReqs = allReqs.filter((r: any) => r.submitted_by_role === 'Accountant')
-        setRequests(accReqs)
-      } else {
-        const defaultReqs = [
-          {
-            id: 't-2', entity_type: 'payment_in_ledger', entity_id: 'UTR8948201931', request_type: 'delete',
-            reason: 'Double check processing failure recorded duplicate account balance postings over bank clearing channels.',
-            status: 'pending', created_at: new Date().toISOString(), submitted_by_name: 'Accountant Desk Staff', submitted_by_role: 'Accountant'
-          }
-        ]
-        localStorage.setItem('modification_requests', JSON.stringify(defaultReqs))
-        setRequests(defaultReqs)
-      }
+    } catch (err: any) {
+      console.warn('Failed to load modification requests:', err)
+      setError(err?.response?.data?.detail || 'Failed to load requests.')
     } finally {
       setLoading(false)
     }
@@ -64,43 +49,20 @@ export default function AccountantModificationsPage() {
 
     setSubmitting(true)
     try {
-      await api.post('/customer/modifications', {
+      await api.post('/api/v1/modifications/', {
         entity_type: entityType,
         entity_id: entityId,
         request_type: requestType,
         reason: reason
       })
-      loadRequests()
-    } catch (err) {
-      console.warn('Error submitting ledger override request, using local fallback:', err)
-      const raw = localStorage.getItem('modification_requests')
-      const allReqs = raw ? JSON.parse(raw) : []
-      let userName = 'Accountant Desk Staff'
-      try {
-        const stored = localStorage.getItem('an_current_user')
-        if (stored) {
-          const u = JSON.parse(stored)
-          userName = u.first_name || u.name || `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Accountant Desk Staff'
-        }
-      } catch {}
-      const newReq = {
-        id: `t-acc-${Date.now()}`,
-        entity_type: entityType,
-        entity_id: entityId,
-        request_type: requestType,
-        reason: reason,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        submitted_by_name: userName,
-        submitted_by_role: 'Accountant'
-      }
-      allReqs.unshift(newReq)
-      localStorage.setItem('modification_requests', JSON.stringify(allReqs))
-      loadRequests()
-    } finally {
       setIsModalOpen(false)
       setEntityId('')
       setReason('')
+      loadRequests()
+    } catch (err: any) {
+      console.warn('Error submitting modification request:', err)
+      alert(err?.response?.data?.detail || 'Failed to submit request.')
+    } finally {
       setSubmitting(false)
     }
   }
@@ -122,19 +84,21 @@ export default function AccountantModificationsPage() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Financial Target Scope</th>
-              <th>Transaction ID / Reference Token</th>
-              <th>Operation Scope</th>
-              <th>Audit Trail Justification</th>
+              <th>Category</th>
+              <th>Reference / ID</th>
+              <th>Type</th>
+              <th>Reason</th>
               <th>Status</th>
               <th>Submitted</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 24, color: '#64748b' }}>Streaming cash books data pipeline...</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 24, color: '#64748b' }}>Loading requests...</td></tr>
+            ) : error ? (
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 24, color: '#ef4444' }}>{error}</td></tr>
             ) : requests.length === 0 ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 24, color: '#94a3b8' }}>No financial balancing modifications requested.</td></tr>
+              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 24, color: '#94a3b8' }}>No modification requests found.</td></tr>
             ) : (
               requests.map((r) => (
                 <tr key={r.id}>
@@ -166,7 +130,6 @@ export default function AccountantModificationsPage() {
         </table>
       </div>
 
-      {/* INTERACTIVE COMPANION POPUP FORM MODAL */}
       {isModalOpen && (
         <div className="modal-backdrop" onClick={() => !submitting && setIsModalOpen(false)}>
           <div className="modal" style={{ maxWidth: 460, width: '100%' }} onClick={e => e.stopPropagation()}>
@@ -179,22 +142,22 @@ export default function AccountantModificationsPage() {
             <form onSubmit={handleSubmit}>
               <div className="modal-body" style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
-                  <label className="form-label">Ledger Segment / Core Target</label>
+                  <label className="form-label">What to correct</label>
                   <select value={entityType} onChange={e => setEntityType(e.target.value)} className="form-input">
-                    <option value="payment_in_ledger">Payment IN Ledger Row Transaction</option>
-                    <option value="payment_out_ledger">Payment OUT Ledger Row Transaction</option>
-                    <option value="commission_distribution">Commission / Broker payout calculation value</option>
-                    <option value="advances_outstanding">Advances Outstanding Balance Settlement State</option>
+                    <option value="payment_in_ledger">Payment IN record</option>
+                    <option value="payment_out_ledger">Payment OUT record</option>
+                    <option value="commission_distribution">Commission record</option>
+                    <option value="advances_outstanding">Advance record</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="form-label">Transaction UUID Token / Voucher Reference</label>
-                  <input type="text" required value={entityId} onChange={e => setEntityId(e.target.value)} placeholder="e.g., UTR98374982312 or Row UUID Token" className="form-input" />
+                  <label className="form-label">Transaction ID / Reference</label>
+                  <input type="text" required value={entityId} onChange={e => setEntityId(e.target.value)} placeholder="e.g., UTR98374982312 or ID" className="form-input" />
                 </div>
 
                 <div>
-                  <label className="form-label">Adjustment Mode</label>
+                  <label className="form-label">Request Type</label>
                   <select value={requestType} onChange={e => setRequestType(e.target.value)} className="form-input">
                     <option value="update">Modify Posted Ledger Row Metrics</option>
                     <option value="delete">Hard Reverse / Annul Financial Row Entry</option>
@@ -202,14 +165,14 @@ export default function AccountantModificationsPage() {
                 </div>
 
                 <div>
-                  <label className="form-label">Audit Trail & Rectification Justification</label>
-                  <textarea rows={3} required value={reason} onChange={e => setReason(e.target.value)} placeholder="Provide accounting audit explanation describing why this asset balancing transaction column requires adjustment or cancellation parameters..." className="form-input" style={{ fontFamily: 'inherit' }} />
+                  <label className="form-label">Reason for correction</label>
+                  <textarea rows={3} required value={reason} onChange={e => setReason(e.target.value)} placeholder="Explain why..." className="form-input" style={{ fontFamily: 'inherit' }} />
                 </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-outline btn-sm" disabled={submitting} onClick={() => setIsModalOpen(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary btn-sm" disabled={submitting} style={{ background: '#10b981', borderColor: '#10b981' }}>
-                  {submitting ? 'Escalating balancing ticket...' : 'Escalate Change to Admin'}
+                  {submitting ? 'Submitting...' : 'Submit to Admin'}
                 </button>
               </div>
             </form>
