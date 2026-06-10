@@ -131,38 +131,19 @@ def preprocess_data(dataset_path, output_dir):
                 )
 
         # ==========================================================
-        # 6. ENCODE CATEGORICAL FEATURES
+        # 6. SKIP FEATURE ENCODING
         # ==========================================================
-        print("\nEncoding categorical columns...")
-
-        feature_encoders = {}
-
-        for col in df.columns:
-
-            if col == TARGET_COLUMN:
-                continue
-
-            from pandas.api.types import (
-                is_string_dtype,
-                is_object_dtype
-            )
-
-            if (
-                is_object_dtype(df[col])
-                or is_string_dtype(df[col])
-            ):
-
-                encoder = LabelEncoder()
-
-                df[col] = encoder.fit_transform(
-                    df[col].astype(str)
-                )
-
-                feature_encoders[col] = encoder
 
         print(
-            f"Encoded {len(feature_encoders)} categorical column(s)."
+            "\nSkipping feature encoding."
         )
+
+        print(
+            "Feature encoding will be handled "
+            "inside feature_engineering.py"
+        )
+
+        feature_encoders = {}
 
         # ==========================================================
         # 7. ENCODE TARGET
@@ -238,15 +219,6 @@ def preprocess_data(dataset_path, output_dir):
         ).to_csv(
             os.path.join(output_dir, "y_test.csv"),
             index=False
-        )
-
-        # Save encoders
-        joblib.dump(
-            feature_encoders,
-            os.path.join(
-                output_dir,
-                "feature_encoders.pkl"
-            )
         )
 
         joblib.dump(
