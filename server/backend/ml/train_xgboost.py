@@ -13,9 +13,7 @@ confusion_matrix
 from xgboost import XGBClassifier
 
 # ==========================================================
-
 # CONFIG
-
 # ==========================================================
 
 TARGET_COLUMN = "ml_recommendation"
@@ -24,9 +22,7 @@ RANDOM_STATE = 42
 TEST_SIZE = 0.20
 
 # ==========================================================
-
 # TRAIN XGBOOST
-
 # ==========================================================
 
 def train_xgboost(dataset_path, model_dir):
