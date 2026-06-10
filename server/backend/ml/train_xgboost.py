@@ -1,10 +1,11 @@
+import os
+import joblib
+import pandas as pd
 
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import (
-accuracy_score,
-classification_report,
-confusion_matrix
+    accuracy_score,
+    classification_report,
+    confusion_matrix
 )
 
 from xgboost import XGBClassifier
@@ -14,108 +15,66 @@ from xgboost import XGBClassifier
 # ==========================================================
 
 TARGET_COLUMN = "ml_recommendation"
-
 RANDOM_STATE = 42
-TEST_SIZE = 0.20
 
 # ==========================================================
 # TRAIN XGBOOST
 # ==========================================================
 
-def train_xgboost(dataset_path, model_dir):
+def train_xgboost(data_dir, model_dir):
 
     print("\n========== XGBOOST TRAINING STARTED ==========\n")
 
     try:
 
         # --------------------------------------------------
-        # LOAD DATASET
+        # LOAD TRAIN / TEST DATA
         # --------------------------------------------------
 
-        if not os.path.exists(dataset_path):
-            raise FileNotFoundError(
-                f"Dataset not found: {dataset_path}"
-            )
-
-        print(f"Loading dataset: {dataset_path}")
-
-        df = pd.read_csv(dataset_path)
-
-        print(f"Dataset Shape: {df.shape}")
-
-        # --------------------------------------------------
-        # VALIDATE TARGET
-        # --------------------------------------------------
-
-        if TARGET_COLUMN not in df.columns:
-            raise ValueError(
-                f"{TARGET_COLUMN} not found"
-            )
-
-        # --------------------------------------------------
-        # ENCODE CATEGORICAL FEATURES
-        # --------------------------------------------------
-
-        feature_encoders = {}
-
-        categorical_columns = df.select_dtypes(
-            include=["object"]
-        ).columns.tolist()
-
-        if TARGET_COLUMN in categorical_columns:
-            categorical_columns.remove(
-                TARGET_COLUMN
-            )
-
-        print(
-            f"Encoding {len(categorical_columns)} categorical columns..."
+        X_train_path = os.path.join(
+            data_dir,
+            "X_train.csv"
         )
 
-        for col in categorical_columns:
-
-            encoder = LabelEncoder()
-
-            df[col] = encoder.fit_transform(
-                df[col].astype(str)
-            )
-
-            feature_encoders[col] = encoder
-
-        # --------------------------------------------------
-        # ENCODE TARGET
-        # --------------------------------------------------
-
-        target_encoder = LabelEncoder()
-
-        y = target_encoder.fit_transform(
-            df[TARGET_COLUMN]
+        X_test_path = os.path.join(
+            data_dir,
+            "X_test.csv"
         )
 
-        X = df.drop(
-            columns=[TARGET_COLUMN]
+        y_train_path = os.path.join(
+            data_dir,
+            "y_train.csv"
         )
 
-        print("\nTarget Classes:")
+        y_test_path = os.path.join(
+            data_dir,
+            "y_test.csv"
+        )
 
-        for idx, label in enumerate(
-            target_encoder.classes_
-        ):
-            print(f"{idx} -> {label}")
+        target_encoder_path = os.path.join(
+            data_dir,
+            "target_encoder.pkl"
+        )
 
-        # --------------------------------------------------
-        # TRAIN TEST SPLIT
-        # --------------------------------------------------
+        print("Loading train/test datasets...")
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X,
-            y,
-            test_size=TEST_SIZE,
-            random_state=RANDOM_STATE,
-            stratify=y
+        X_train = pd.read_csv(X_train_path)
+        X_test = pd.read_csv(X_test_path)
+
+        y_train = pd.read_csv(
+            y_train_path
+        )[TARGET_COLUMN]
+
+        y_test = pd.read_csv(
+            y_test_path
+        )[TARGET_COLUMN]
+
+        target_encoder = joblib.load(
+            target_encoder_path
         )
 
         print(
-            f"\nTrain Shape: {X_train.shape}"
+            f"Train Shape: {X_train.shape}"
         )
 
         print(
@@ -161,7 +120,9 @@ def train_xgboost(dataset_path, model_dir):
             f"\nAccuracy: {accuracy:.4f}"
         )
 
-        print("\nClassification Report:\n")
+        print(
+            "\nClassification Report:\n"
+        )
 
         print(
             classification_report(
@@ -171,7 +132,9 @@ def train_xgboost(dataset_path, model_dir):
             )
         )
 
-        print("\nConfusion Matrix:\n")
+        print(
+            "\nConfusion Matrix:\n"
+        )
 
         print(
             confusion_matrix(
@@ -189,32 +152,18 @@ def train_xgboost(dataset_path, model_dir):
             exist_ok=True
         )
 
+        model_path = os.path.join(
+            model_dir,
+            "xgboost_model.pkl"
+        )
+
         joblib.dump(
             model,
-            os.path.join(
-                model_dir,
-                "xgboost_model.pkl"
-            )
-        )
-
-        joblib.dump(
-            feature_encoders,
-            os.path.join(
-                model_dir,
-                "xgboost_feature_encoders.pkl"
-            )
-        )
-
-        joblib.dump(
-            target_encoder,
-            os.path.join(
-                model_dir,
-                "xgboost_target_encoder.pkl"
-            )
+            model_path
         )
 
         print(
-            "\nModel saved successfully."
+            f"\nModel saved to:\n{model_path}"
         )
 
         print(
@@ -223,13 +172,14 @@ def train_xgboost(dataset_path, model_dir):
 
     except Exception as e:
 
-        print(f"\nERROR: {str(e)}")
+        print(
+            f"\nERROR: {str(e)}"
+        )
         raise
 
+
 # ==========================================================
-
 # MAIN
-
 # ==========================================================
 
 if __name__ == "__main__":
@@ -238,10 +188,9 @@ if __name__ == "__main__":
         os.path.abspath(__file__)
     )
 
-    dataset_path = os.path.join(
+    data_dir = os.path.join(
         script_dir,
-        "feature_data",
-        "feature_engineered_dataset.csv"
+        "data_splits"
     )
 
     model_dir = os.path.join(
@@ -250,6 +199,6 @@ if __name__ == "__main__":
     )
 
     train_xgboost(
-        dataset_path,
+        data_dir,
         model_dir
     )
