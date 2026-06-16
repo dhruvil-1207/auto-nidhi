@@ -1,5 +1,6 @@
 import datetime
 from datetime import date
+import traceback
 from typing import Optional
 from uuid import UUID
 
@@ -443,14 +444,13 @@ def predict_risk(
     raw_input["recovery_percentage"] = (amount_recovered / amount_advances * 100) if amount_advances > 0 else 0
 
     try:
-        # Run prediction
-        prediction = predict_advance(raw_input)
-        prediction["risk_score"] = risk_score
-    except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"ML Prediction failed: {str(exc)}"
-        )
+        result = predict_advance(payload)
+        return result
+
+    except Exception as e:
+        traceback.print_exc()
+        print("PREDICT ERROR:", repr(e))
+        raise
 
     # Construct clean metrics breakdown for UI
     prediction["key_metrics"] = {
