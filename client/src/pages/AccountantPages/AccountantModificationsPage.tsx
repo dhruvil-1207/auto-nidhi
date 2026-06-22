@@ -30,6 +30,7 @@ export default function AccountantModificationsPage() {
     setLoading(true)
     setError(null)
     try {
+      // Corrected: Removed the double /api/v1 prefix.
       const res = await api.get('/customer/modifications')
       setRequests(res.data || [])
     } catch (err: any) {
