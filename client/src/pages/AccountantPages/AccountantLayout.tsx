@@ -1,9 +1,9 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   LayoutDashboard, FolderOpen, ArrowDownToLine, ArrowUpFromLine,
   Receipt, ShieldCheck, Wallet, Landmark, BadgePercent,
-  LogOut, BellRing, Settings
+  LogOut, BellRing, Settings, Menu,
 } from 'lucide-react'
 import logoDark from '../../assets/AutoNidhi Logo 1.png'
 import NotificationPanel from '../../components/app/NotificationPanel'
@@ -44,6 +44,8 @@ export default function AccountantLayout() {
   const [userName, setUserName] = useState('Accountant')
   const [notifOpen, setNotifOpen] = useState(false)
   const [notifCount, setNotifCount] = useState(0)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const closeSidebar = useCallback(() => setSidebarOpen(false), [])
 
   useEffect(() => {
     const role = localStorage.getItem('user_role') || ''
@@ -79,8 +81,14 @@ export default function AccountantLayout() {
 
   return (
     <div className="app-shell">
+      {/* ── Mobile sidebar overlay ── */}
+      <div
+        className={`sidebar-overlay${sidebarOpen ? ' open' : ''}`}
+        onClick={closeSidebar}
+      />
+
       {/* ── Sidebar ── */}
-      <aside className="app-sidebar">
+      <aside className={`app-sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="sb-logo">
           <div className="sb-logo-mark"><img src={logoDark} alt="AutoNidhi" className="sidebar-logo-image" /></div>
         </div>
@@ -94,6 +102,7 @@ export default function AccountantLayout() {
                 to={item.to}
                 end={item.to === '/accountant/dashboard'}
                 className={({ isActive }) => (isActive ? 'active-link' : '')}
+                onClick={closeSidebar}
               >
                 <item.icon size={16} /> {item.label}
               </NavLink>
@@ -110,6 +119,14 @@ export default function AccountantLayout() {
       {/* ── Main Area ── */}
       <div className="app-main">
         <header className="app-topbar">
+          {/* Hamburger – mobile only */}
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
+          </button>
           <h1>Accountant Portal</h1>
           <div className="app-user">
             <div style={{ position: 'relative' }}>

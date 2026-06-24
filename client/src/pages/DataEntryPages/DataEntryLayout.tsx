@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import {
   LayoutDashboard, Users, FolderOpen,
   ArrowDownToLine, ArrowUpFromLine, Receipt, ShieldCheck, Wallet,
-  Car, LogOut, Bell, User, Settings, ChevronDown, BadgePercent, HandCoins
+  Car, LogOut, Bell, User, Settings, ChevronDown, BadgePercent, HandCoins, Menu,
 } from 'lucide-react'
 import NotificationPanel from '../../components/app/NotificationPanel'
 import { subscribe, unreadCount, fetchNotifications } from '../../store/notificationStore'
@@ -67,6 +67,8 @@ export default function DataEntryLayout() {
   const [badgeCount, setBadgeCount] = useState(0)
   const [showNotifs, setShowNotifs] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const closeSidebar = useCallback(() => setSidebarOpen(false), [])
   const profileRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -122,7 +124,13 @@ export default function DataEntryLayout() {
 
   return (
     <div className="app-shell">
-      <aside className="app-sidebar">
+      {/* ── Mobile sidebar overlay ── */}
+      <div
+        className={`sidebar-overlay${sidebarOpen ? ' open' : ''}`}
+        onClick={closeSidebar}
+      />
+
+      <aside className={`app-sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="sb-logo">
           <div className="sb-logo-mark">
             <Car size={18} color="#fff" />
@@ -138,6 +146,7 @@ export default function DataEntryLayout() {
                 to={item.to}
                 end={item.to === '/staff/dashboard'}
                 className={({ isActive }) => (isActive ? 'active-link' : '')}
+                onClick={closeSidebar}
               >
                 <item.icon size={16} /> {item.label}
               </NavLink>
@@ -153,6 +162,14 @@ export default function DataEntryLayout() {
 
       <div className="app-main">
         <header className="app-topbar">
+          {/* Hamburger – mobile only */}
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
+          </button>
           <h1>Staff Portal</h1>
 
           <div className="app-user" style={{ position: 'relative' }}>

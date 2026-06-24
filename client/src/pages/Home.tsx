@@ -1,7 +1,8 @@
 // client/src/pages/Home.tsx
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  CheckCircle2, ArrowRight, Shield, TrendingUp, Users, Building, ShieldCheck
+  CheckCircle2, ArrowRight, Shield, TrendingUp, Users, Building, ShieldCheck, Menu, X
 } from 'lucide-react'
 import '../pages.css'
 import logoLight from '../assets/AutoNidhi Logo.png'
@@ -45,8 +46,35 @@ const features = [
 ]
 
 export default function Home() {
+  const [menuOpen, setMenuOpen] = useState(false)
+
   return (
     <>
+      {/* ── Mobile Nav Overlay ── */}
+      <div
+        className={`mobile-nav-overlay${menuOpen ? ' open' : ''}`}
+        onClick={() => setMenuOpen(false)}
+      />
+
+      {/* ── Mobile Nav Drawer ── */}
+      <nav className={`mobile-nav${menuOpen ? ' open' : ''}`}>
+        <div className="mobile-nav-header">
+          <img src={logoLight} alt="AutoNidhi" style={{ height: 40, objectFit: 'contain' }} />
+          <button className="mobile-nav-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">
+            <X size={22} color="var(--gray-700)" />
+          </button>
+        </div>
+        <div className="mobile-nav-links">
+          <a href="#features" onClick={() => setMenuOpen(false)}>Features</a>
+          <a href="#about" onClick={() => setMenuOpen(false)}>About Us</a>
+          <a href="#contact" onClick={() => setMenuOpen(false)}>Contact</a>
+        </div>
+        <div className="mobile-nav-actions">
+          <Link to="/login" className="btn btn-outline" onClick={() => setMenuOpen(false)}>Sign In</Link>
+          <Link to="/signup" className="btn btn-primary" onClick={() => setMenuOpen(false)}>Get Started</Link>
+        </div>
+      </nav>
+
       {/* ── Navbar ── */}
       <nav className="navbar">
         <div className="container">
@@ -66,9 +94,18 @@ export default function Home() {
             <Link to="/login" className="btn btn-outline btn-sm">Sign In</Link>
             <Link to="/signup" className="btn btn-primary btn-sm">Get Started</Link>
           </div>
+
+          {/* Hamburger – only visible on mobile */}
+          <button
+            className="navbar-hamburger"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu size={24} color="var(--gray-700)" />
+          </button>
         </div>
       </nav>
- 
+
       {/* ── Hero ── */}
       <section className="hero">
         <div className="container">
@@ -201,7 +238,7 @@ export default function Home() {
             AutoNidhi was founded to simplify and digitize the complex workflow of auto loan and insurance consultancies across India. We believe in providing robust tools that let you focus on growing your business while we handle the organization.
           </p>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px', marginTop: '40px' }}>
+          <div className="about-grid">
             <div className="feature-card">
               <div className="feature-icon" style={{ background: '#f3e8ff', color: '#9333ea' }}><Users size={22} /></div>
               <h3>Our Mission</h3>
@@ -229,18 +266,18 @@ export default function Home() {
             Have questions about integrating AutoNidhi into your consultancy? Our dedicated support team is here to help you get started.
           </p>
           
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginTop: '40px', flexWrap: 'wrap' }}>
-            <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '24px', borderRadius: '14px', minWidth: '240px', textAlign: 'center' }}>
-              <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Email Support</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>support@autonidhi.com</div>
+          <div className="contact-cards-row">
+            <div className="contact-card">
+              <div className="contact-card-label">Email Support</div>
+              <div className="contact-card-value">support@autonidhi.com</div>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '24px', borderRadius: '14px', minWidth: '240px', textAlign: 'center' }}>
-              <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sales & Inquiries</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>+91 98765 43210</div>
+            <div className="contact-card">
+              <div className="contact-card-label">Sales &amp; Inquiries</div>
+              <div className="contact-card-value">+91 98765 43210</div>
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '24px', borderRadius: '14px', minWidth: '240px', textAlign: 'center' }}>
-              <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Head Office</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>Vadodara, Gujarat</div>
+            <div className="contact-card">
+              <div className="contact-card-label">Head Office</div>
+              <div className="contact-card-value">Vadodara, Gujarat</div>
             </div>
           </div>
         </div>

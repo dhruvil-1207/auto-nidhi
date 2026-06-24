@@ -5,7 +5,7 @@ import {
   ArrowDownToLine, ArrowUpFromLine, BadgePercent, HandCoins,
   Receipt, ShieldCheck, Wallet, Landmark,
   Database, Settings, LogOut, Bell, PiggyBank,
-  User, ChevronDown, ClipboardList, BarChart2,
+  User, ChevronDown, ClipboardList, BarChart2, Menu,
 } from 'lucide-react'
 import NotificationPanel from '../../components/app/NotificationPanel'
 import { subscribe, unreadCount, fetchNotifications } from '../../store/notificationStore'
@@ -211,6 +211,8 @@ export default function AdminLayout() {
   }
 
   const closeNotifs = useCallback(() => setShowNotifs(false), [])
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const closeSidebar = useCallback(() => setSidebarOpen(false), [])
 
   // Resolve Title smoothly dynamically based on role routes
   const baseRoute = location.pathname.replace('/staff', '').replace('/accountant', '').replace('/admin', '')
@@ -247,7 +249,13 @@ export default function AdminLayout() {
 
   return (
     <div className="app-shell">
-      <aside className="app-sidebar">
+      {/* ── Mobile sidebar overlay ── */}
+      <div
+        className={`sidebar-overlay${sidebarOpen ? ' open' : ''}`}
+        onClick={closeSidebar}
+      />
+
+      <aside className={`app-sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="sb-logo">
           <div className="sb-logo-mark">
             <img src={logoDark} alt="AutoNidhi" className="sidebar-logo-image" />
@@ -264,6 +272,7 @@ export default function AdminLayout() {
                   key={item.to}
                   to={item.to}
                   className={isActive ? 'active-link' : ''}
+                  onClick={closeSidebar}
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
@@ -303,6 +312,14 @@ export default function AdminLayout() {
 
       <div className="app-main">
         <header className="app-topbar">
+          {/* Hamburger – mobile only */}
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
+          </button>
           <h1>{pageTitle}</h1>
 
           <div className="app-user" style={{ position: 'relative' }}>

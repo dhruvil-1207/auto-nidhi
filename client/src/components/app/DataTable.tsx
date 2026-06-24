@@ -79,6 +79,7 @@ export default function DataTable<T extends Record<string, any>>({
         <div className="data-empty">{empty}</div>
       ) : (
         <>
+          <div className="data-table-wrapper">
           <table className="data-table">
             <thead>
               <tr>{columns.map((c) => <th key={String(c.key)}>{c.label}</th>)}</tr>
@@ -93,6 +94,7 @@ export default function DataTable<T extends Record<string, any>>({
               ))}
             </tbody>
           </table>
+          </div>
           {pageSize && pageCount > 1 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
               <div style={{ color: 'var(--gray-500)', fontSize: '0.9rem' }}>
