@@ -89,8 +89,11 @@ export default function AccountantLayout() {
 
       {/* ── Sidebar ── */}
       <aside className={`app-sidebar${sidebarOpen ? ' open' : ''}`}>
-        <div className="sb-logo">
+        <div className="sb-logo" style={{ position: 'relative' }}>
           <div className="sb-logo-mark"><img src={logoDark} alt="AutoNidhi" className="sidebar-logo-image" /></div>
+          <button className="sidebar-close-btn" onClick={closeSidebar} aria-label="Close menu">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+          </button>
         </div>
 
         {accountantNav.map((group) => (

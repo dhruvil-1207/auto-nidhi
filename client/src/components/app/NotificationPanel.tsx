@@ -62,13 +62,7 @@ const NotificationPanel: React.FC<Props> = ({ onClose }) => {
   const visibleNotifs = notifs.slice(0, displayCount)
 
   return (
-    <div ref={panelRef} style={{
-      position: 'absolute', top: '56px', right: '120px', width: '360px', maxHeight: '480px',
-      background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', zIndex: 1000,
-      display: 'flex', flexDirection: 'column', overflow: 'hidden',
-      boxShadow: '0 8px 40px rgba(15,23,42,.15), 0 2px 8px rgba(15,23,42,.06)',
-      animation: 'notifPanelIn .18s ease',
-    }}>
+    <div ref={panelRef} className="notif-panel">
       {/* Header */}
       <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

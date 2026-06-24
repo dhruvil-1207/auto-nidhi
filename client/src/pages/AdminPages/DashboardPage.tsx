@@ -351,7 +351,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Extended KPI row ── */}
-          <div className="db-kpi-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
+          <div className="db-kpi-grid db-kpi-grid-5">
             <div className="db-kpi-card" style={{ background: 'linear-gradient(135deg,#fdf4ff,#fae8ff)', cursor: 'pointer' }} onClick={() => navigate('/expenses')}>
               <div className="db-kpi-icon" style={{ background: '#f3e8ff', color: '#7c3aed' }}><ReceiptText size={20} /></div>
               <div className="db-kpi-body">
@@ -475,6 +475,7 @@ export default function DashboardPage() {
                 <div className="db-card-title"><FolderOpen size={16} /> Recent Files</div>
                 <Link to="/files" className="db-see-all">All files <ArrowRight size={12} /></Link>
               </div>
+              <div className="data-table-wrapper">
               <table className="db-mini-table">
                 <thead>
                   <tr>
@@ -513,6 +514,7 @@ export default function DashboardPage() {
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
 
             <div className="db-card">
