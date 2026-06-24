@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import {
   LayoutDashboard, FileText, FolderOpen, CreditCard, ShieldCheck, ClipboardList,
-  Car, LogOut, Bell, UserCircle2, ChevronDown, Settings,
+  Car, LogOut, Bell, UserCircle2, ChevronDown, Settings, Menu,
 } from 'lucide-react'
 import NotificationPanel from '../../components/app/NotificationPanel'
 import logoDark from '../../assets/AutoNidhi Logo 1.png'
@@ -39,6 +39,8 @@ export default function CustomerLayout() {
   const [userInitial, setUserInitial] = useState('C')
   const [profileOpen, setProfileOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const closeSidebar = useCallback(() => setSidebarOpen(false), [])
   
   // State for the unread badge count
   const [notifCount, setNotifCount] = useState(0)
@@ -111,8 +113,14 @@ export default function CustomerLayout() {
 
   return (
     <div className="app-shell">
+      {/* ── Mobile sidebar overlay ── */}
+      <div
+        className={`sidebar-overlay${sidebarOpen ? ' open' : ''}`}
+        onClick={closeSidebar}
+      />
+
       {/* ── Sidebar ── */}
-      <aside className="app-sidebar">
+      <aside className={`app-sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="sb-logo">
           <div className="sb-logo-mark">
             <img src={logoDark} alt="AutoNidhi" className="sidebar-logo-image" />
@@ -128,6 +136,7 @@ export default function CustomerLayout() {
                 to={item.to}
                 end={item.to === '/portal'}
                 className={({ isActive }) => isActive ? 'active' : ''}
+                onClick={closeSidebar}
               >
                 <item.icon size={16} /> {item.label}
               </NavLink>
@@ -144,6 +153,14 @@ export default function CustomerLayout() {
       {/* ── Main area ── */}
       <div className="app-main">
         <header className="app-topbar">
+          {/* Hamburger – mobile only */}
+          <button
+            className="mobile-menu-btn"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
+          </button>
           <h1>Customer Portal</h1>
           <div className="app-user">
 
