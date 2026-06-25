@@ -530,10 +530,22 @@
 .hp-footer-made { font-size: 0.78rem; color: rgba(255,255,255,.25); }
 
 /* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE — 6-TIER BREAKPOINT SYSTEM
-   Mobile-first corrections applied additively from desktop base.
-   Zero changes to functionality, routing, or animations.
+   RESPONSIVE — MOBILE-FIRST COMPONENT RESTRUCTURING
+   Philosophy: At each breakpoint we REDESIGN layouts for the
+   device context — not just shrink the desktop version.
 ═══════════════════════════════════════════════════════════════ */
+
+/* ── Global: Prevent horizontal overflow from orbs on ALL sections ── */
+.hp-hero,
+.hp-section-services,
+.hp-section-features,
+.hp-section-about,
+.hp-section-contact,
+.hp-section-cta,
+.hp-trust-strip,
+.hp-footer {
+  overflow-x: hidden;
+}
 
 /* ── Tier 1: ≤ 1280px — Large tablet / small laptop ── */
 @media (max-width: 1280px) {
@@ -548,56 +560,52 @@
 
 /* ── Tier 2: ≤ 1024px — Tablet landscape ── */
 @media (max-width: 1024px) {
-  /* Grids: 3 → 2 columns */
-  .hp-features-grid { grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  .hp-features-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   .hp-svc-grid      { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-
-  /* Padding reduction */
   .hp-section-features,
   .hp-section-about,
   .hp-section-services,
   .hp-section-contact,
   .hp-section-cta { padding: 80px 0; }
-
-  /* About layout narrower gap */
-  .hp-about-layout { gap: 56px; }
-
-  /* Service card */
+  .hp-about-layout { gap: 52px; }
   .hp-svc-card { padding: 32px 24px; }
   .hp-svc-icon-wrap { width: 56px; height: 56px; font-size: 1.5rem; }
 }
 
-/* ── Tier 3: ≤ 900px — Tablet portrait / large phone ── */
+/* ── Tier 3: ≤ 900px — Tablet portrait ── */
 @media (max-width: 900px) {
-  /* Container */
   .hp-container { padding: 0 20px; }
 
-  /* Navbar: show hamburger, hide desktop links + actions */
+  /* Navbar */
   .hp-navbar-links   { display: none; }
   .hp-navbar-actions { display: none; }
   .hp-hamburger      { display: flex; }
   .hp-navbar-logo-img { height: 44px; }
 
-  /* Hero: single column, hide visual panel */
+  /* Hero: single column, centered */
   .hp-hero .hp-container {
     grid-template-columns: 1fr;
     gap: 0;
     min-height: auto;
-    padding-top: 36px;
-    padding-bottom: 52px;
+    padding-top: 40px;
+    padding-bottom: 56px;
+    text-align: center;
   }
-  .hp-hero-visual { display: none; }
+  .hp-hero-visual  { display: none; }
   .hp-hero-content { text-align: center; }
-  .hp-hero-badge  { justify-content: center; }
+  .hp-hero-badge   { justify-content: center; }
   .hp-hero-actions { justify-content: center; }
-  .hp-hero-stats  { justify-content: center; }
-  .hp-hero-desc   { max-width: 100%; }
-  .hp-hero-title  { font-size: clamp(2.2rem, 5.5vw, 2.8rem); }
-  .hp-hero-stat   { padding: 0 24px; }
+  .hp-hero-stats   { justify-content: center; }
+  .hp-hero-desc    { max-width: 100%; margin-left: auto; margin-right: auto; }
+  .hp-hero-title   { font-size: clamp(2.2rem, 5.5vw, 2.8rem); }
+  .hp-hero-stat    { padding: 0 24px; }
   .hp-hero-stat:first-child { padding-left: 0; }
 
   /* About: single column */
   .hp-about-layout { grid-template-columns: 1fr; gap: 32px; }
+
+  /* Services: stays 2-col on tablet */
+  .hp-svc-grid { grid-template-columns: repeat(2, 1fr); }
 
   /* Section padding */
   .hp-section-features,
@@ -605,178 +613,250 @@
   .hp-section-services,
   .hp-section-contact,
   .hp-section-cta { padding: 72px 0; }
-
-  /* Services grid: still 2-col on 900px tablet */
-  .hp-svc-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* ── Tier 4: ≤ 768px — Mobile landscape / large phone ── */
+/* ── Tier 4: ≤ 768px — Large phone / mobile landscape ── */
 @media (max-width: 768px) {
-  /* Container */
   .hp-container { padding: 0 16px; }
 
-  /* Grids: all collapse to 1 column */
-  .hp-features-grid { grid-template-columns: 1fr; gap: 14px; }
-  .hp-svc-grid      { grid-template-columns: 1fr; gap: 16px; }
-  .hp-contact-grid  { grid-template-columns: 1fr; gap: 12px; }
-
-  /* Section padding */
+  /* Sections */
   .hp-section-features,
   .hp-section-about,
   .hp-section-services,
   .hp-section-contact,
-  .hp-section-cta { padding: 60px 0; }
+  .hp-section-cta { padding: 56px 0; }
 
   /* Hero */
   .hp-hero .hp-container { padding-top: 28px; padding-bottom: 44px; }
-  .hp-hero-title { font-size: clamp(2rem, 6vw, 2.4rem); }
+  .hp-hero-title   { font-size: clamp(1.95rem, 6vw, 2.4rem); }
   .hp-hero-actions { gap: 10px; margin-bottom: 36px; }
+  .hp-hero-stat    { padding: 0 20px; }
 
-  /* Trust strip */
-  .hp-trust-inner { gap: 16px 32px; padding: 0 8px; }
-  .hp-trust-strip { padding: 18px 0; }
+  /* ── TRUST STRIP: Horizontal scroll rail (mobile-specific) ── */
+  .hp-trust-strip { padding: 0; }
+  .hp-trust-inner {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0;
+    padding: 16px 16px;
+    justify-content: flex-start;
+  }
+  .hp-trust-inner::-webkit-scrollbar { display: none; }
+  .hp-trust-item {
+    flex-shrink: 0;
+    padding: 8px 18px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 99px;
+    font-size: 0.78rem;
+    gap: 7px;
+    white-space: nowrap;
+    margin-right: 8px;
+  }
 
-  /* Feature cards */
-  .hp-feature-card { padding: 24px 20px; }
+  /* ── FEATURE CARDS: Switch to horizontal layout ── */
+  /* Icon on left, content on right — saves vertical space */
+  .hp-features-grid { grid-template-columns: 1fr; gap: 12px; }
+  .hp-feature-card {
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    align-items: flex-start;
+    border-radius: 16px;
+  }
+  .hp-feature-icon-wrap {
+    width: 46px; height: 46px; min-width: 46px;
+    font-size: 1.2rem; margin-bottom: 0; border-radius: 12px;
+  }
+  .hp-feature-card-body { flex: 1; }
+  .hp-feature-card h3 { font-size: 0.97rem; margin-bottom: 6px; }
+  .hp-feature-card p  { font-size: 0.83rem; line-height: 1.58; }
+  .hp-feature-chip { font-size: 0.68rem; margin-top: 10px; padding: 3px 10px; }
 
-  /* Service cards */
-  .hp-svc-card { padding: 28px 20px; }
-  .hp-svc-icon-wrap { width: 52px; height: 52px; font-size: 1.4rem; margin-bottom: 18px; }
-  .hp-svc-title { font-size: 1.1rem; }
+  /* ── ABOUT: Stats as 3-col grid ── */
+  .hp-about-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .hp-about-stat-val { font-size: 1.65rem; }
+  .hp-about-card { padding: 18px 20px; gap: 14px; }
 
-  /* Contact cards */
-  .hp-contact-card { padding: 24px 20px; }
-  .hp-contact-icon { font-size: 1.6rem; }
+  /* Services: collapse to 1 col */
+  .hp-svc-grid { grid-template-columns: 1fr; gap: 14px; }
+  .hp-svc-card { padding: 26px 20px; }
+  .hp-svc-icon-wrap { width: 50px; height: 50px; font-size: 1.35rem; margin-bottom: 16px; }
+  .hp-svc-title { font-size: 1.08rem; }
 
-  /* About */
-  .hp-about-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .hp-about-card { padding: 20px 22px; }
+  /* Contact: 1 col */
+  .hp-contact-grid { grid-template-columns: 1fr; gap: 10px; }
+  .hp-contact-card { padding: 22px 20px; }
 
   /* Footer */
   .hp-footer-top { flex-direction: column; gap: 28px; }
   .hp-footer-brand { max-width: 100%; }
-  .hp-footer-links-section { gap: 32px; }
-
-  /* CTA */
+  .hp-footer-links-section { gap: 36px; }
   .hp-cta-desc { max-width: 100%; }
 }
 
-/* ── Tier 5: ≤ 480px — Standard small mobile ── */
+/* ── Tier 5: ≤ 480px — Standard small phone (iPhone 14, Pixel 7) ── */
 @media (max-width: 480px) {
-  /* Container */
   .hp-container { padding: 0 14px; }
 
-  /* Section padding */
+  /* Section padding further reduced */
   .hp-section-features,
   .hp-section-about,
   .hp-section-services,
-  .hp-section-contact,
-  .hp-section-cta { padding: 52px 0; }
+  .hp-section-contact { padding: 48px 0; }
+  .hp-section-cta { padding: 48px 0; }
 
   /* Navbar */
   .hp-navbar-logo-img { height: 40px; }
+  /* Ensure hamburger is a proper 44px touch target */
+  .hp-hamburger { width: 44px; height: 44px; padding: 0; justify-content: center; }
 
-  /* Hero */
+  /* ── HERO ── */
   .hp-hero .hp-container { padding-top: 24px; padding-bottom: 36px; }
-  .hp-hero-badge { font-size: 0.7rem; padding: 5px 12px; white-space: normal; text-align: center; }
-  .hp-hero-title { font-size: 1.85rem; letter-spacing: -0.3px; }
-  .hp-hero-desc  { font-size: 0.93rem; margin-bottom: 28px; }
-  .hp-hero-actions { flex-direction: column; margin-bottom: 32px; }
-  .hp-hero-actions .hp-btn { width: 100%; justify-content: center; }
-  .hp-hero-stats  { flex-direction: column; gap: 14px; }
-  .hp-hero-stat   { padding: 0; border-right: none; border-bottom: 1px solid rgba(255,255,255,.08); padding-bottom: 14px; }
-  .hp-hero-stat:last-child { border-bottom: none; padding-bottom: 0; }
-
-  /* Trust strip: 2-column grid */
-  .hp-trust-inner {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    padding: 0;
+  .hp-hero-badge {
+    font-size: 0.68rem; padding: 5px 12px;
+    white-space: normal; text-align: center;
+    line-height: 1.4;
   }
-  .hp-trust-item { justify-content: flex-start; font-size: 0.78rem; }
+  .hp-hero-title {
+    font-size: 1.9rem;
+    letter-spacing: -0.3px;
+    margin-bottom: 16px;
+  }
+  .hp-hero-desc { font-size: 0.9rem; margin-bottom: 26px; line-height: 1.7; }
 
-  /* Feature cards */
-  .hp-feature-card { padding: 20px 16px; border-radius: 16px; }
-  .hp-feature-icon-wrap { width: 48px; height: 48px; font-size: 1.3rem; margin-bottom: 16px; }
-  .hp-feature-chip { font-size: 0.68rem; padding: 3px 10px; }
+  /* Hero buttons: full width, 48px height (proper touch target) */
+  .hp-hero-actions { flex-direction: column; gap: 10px; margin-bottom: 32px; }
+  .hp-hero-actions .hp-btn {
+    width: 100%; justify-content: center;
+    min-height: 48px; font-size: 0.95rem; border-radius: 12px;
+  }
 
-  /* Service cards */
-  .hp-svc-card { padding: 24px 18px; border-radius: 18px; }
-  .hp-svc-icon-wrap { width: 46px; height: 46px; font-size: 1.3rem; margin-bottom: 16px; }
-  .hp-svc-title { font-size: 1.05rem; }
-  .hp-svc-desc  { font-size: 0.85rem; }
-  .hp-svc-list  { gap: 7px; }
-  .hp-svc-list li { font-size: 0.82rem; }
+  /* ── HERO STATS: Compact 3-column grid (not stacked column) ── */
+  .hp-hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 16px;
+    padding: 16px 8px;
+  }
+  .hp-hero-stat {
+    padding: 0 8px;
+    border-right: 1px solid rgba(255,255,255,.08);
+    border-bottom: none;
+    text-align: center;
+  }
+  .hp-hero-stat:last-child { border-right: none; }
+  .hp-stat-val { font-size: 1.3rem; letter-spacing: -0.5px; }
+  .hp-stat-lbl { font-size: 0.65rem; margin-top: 4px; }
 
-  /* Contact */
-  .hp-contact-card { padding: 20px 16px; border-radius: 16px; }
-  .hp-contact-icon { font-size: 1.5rem; margin-bottom: 10px; }
-  .hp-contact-value { font-size: 0.92rem; word-break: break-word; }
+  /* ── TRUST STRIP on 480px ── */
+  .hp-trust-item { padding: 6px 14px; font-size: 0.74rem; }
 
-  /* About */
-  .hp-about-stats { grid-template-columns: 1fr; gap: 12px; }
-  .hp-about-stat-val { font-size: 1.7rem; }
+  /* ── FEATURE CARDS: Keep horizontal but tighter ── */
+  .hp-feature-card { padding: 16px 14px; gap: 14px; }
+  .hp-feature-icon-wrap { width: 42px; height: 42px; min-width: 42px; font-size: 1.1rem; }
+  .hp-feature-card h3 { font-size: 0.92rem; }
+  .hp-feature-card p  { font-size: 0.8rem; }
+
+  /* ── ABOUT ── */
   .hp-about-heading { font-size: 1.6rem; }
-  .hp-about-card { padding: 18px 16px; gap: 14px; }
-  .hp-about-card-icon { width: 40px; height: 40px; font-size: 1.1rem; }
+  .hp-about-desc { font-size: 0.88rem; }
+  /* Stats stay 3-col grid but smaller */
+  .hp-about-stats { gap: 10px; }
+  .hp-about-stat-val { font-size: 1.45rem; }
+  .hp-about-stat-lbl { font-size: 0.7rem; }
+  .hp-about-card { padding: 16px 14px; gap: 12px; }
+  .hp-about-card-icon { width: 38px; height: 38px; font-size: 1rem; }
+  .hp-about-card-title { font-size: 0.88rem; }
+  .hp-about-card-desc  { font-size: 0.8rem; }
 
-  /* CTA */
-  .hp-section-cta { padding: 48px 0; }
-  .hp-cta-actions { flex-direction: column; align-items: stretch; }
-  .hp-cta-actions .hp-btn { width: 100%; justify-content: center; }
+  /* ── SERVICE CARDS: Mobile redesign ── */
+  .hp-svc-card { padding: 22px 16px; border-radius: 18px; }
+  .hp-svc-icon-wrap { width: 44px; height: 44px; font-size: 1.2rem; margin-bottom: 14px; }
+  .hp-svc-title { font-size: 1rem; margin-bottom: 8px; }
+  .hp-svc-desc  { font-size: 0.82rem; margin-bottom: 14px; line-height: 1.65; }
+  .hp-svc-list  { gap: 7px; }
+  .hp-svc-list li { font-size: 0.79rem; gap: 8px; }
+  .hp-svc-check { width: 16px; height: 16px; font-size: 0.55rem; }
 
-  /* Footer */
+  /* ── CONTACT ── */
+  .hp-contact-card { padding: 18px 16px; border-radius: 14px; }
+  .hp-contact-icon  { font-size: 1.5rem; margin-bottom: 8px; }
+  .hp-contact-label { font-size: 0.68rem; }
+  .hp-contact-value { font-size: 0.9rem; word-break: break-word; }
+
+  /* ── CTA ── */
+  .hp-cta-title { font-size: 1.7rem; }
+  .hp-cta-desc  { font-size: 0.9rem; margin-bottom: 28px; }
+  .hp-cta-actions { flex-direction: column; align-items: stretch; gap: 10px; }
+  .hp-cta-actions .hp-btn {
+    width: 100%; justify-content: center;
+    min-height: 48px; font-size: 0.95rem; border-radius: 12px;
+  }
+
+  /* ── FOOTER ── */
   .hp-footer { padding: 36px 0 24px; }
-  .hp-footer-links-section { flex-direction: column; gap: 16px; }
+  .hp-footer-links-section { flex-direction: column; gap: 20px; }
   .hp-footer-bottom { flex-direction: column; text-align: center; gap: 8px; }
+  .hp-footer-logo { font-size: 1.3rem; }
 }
 
-/* ── Tier 6: ≤ 360px — Very small mobile (budget Android / iPhone mini) ── */
+/* ── Tier 6: ≤ 360px — Very small phones (budget Android, iPhone SE/mini) ── */
 @media (max-width: 360px) {
-  /* Container */
   .hp-container { padding: 0 12px; }
 
   /* Navbar */
-  .hp-navbar { height: 62px; }
-  .hp-navbar-logo-img { height: 36px; }
+  .hp-navbar { height: 60px; }
+  .hp-hero   { padding-top: 60px; }
+  .hp-navbar-logo-img { height: 34px; }
 
   /* Hero */
-  .hp-hero { padding-top: 62px; }
-  .hp-hero-title { font-size: 1.6rem; }
-  .hp-hero-badge { font-size: 0.66rem; padding: 4px 10px; }
-  .hp-hero-desc  { font-size: 0.88rem; }
-  .hp-stat-val   { font-size: 1.5rem; }
-  .hp-stat-lbl   { font-size: 0.7rem; }
+  .hp-hero .hp-container { padding-top: 20px; padding-bottom: 30px; }
+  .hp-hero-badge { font-size: 0.63rem; }
+  .hp-hero-title { font-size: 1.65rem; }
+  .hp-hero-desc  { font-size: 0.85rem; }
 
-  /* Trust strip: keep 2-col but tighter */
-  .hp-trust-inner { gap: 10px; }
-  .hp-trust-item  { font-size: 0.73rem; gap: 6px; }
+  /* Hero stats: tight 3-col */
+  .hp-stat-val { font-size: 1.15rem; }
+  .hp-stat-lbl { font-size: 0.6rem; }
+  .hp-hero-stats { padding: 12px 4px; }
+  .hp-hero-stat  { padding: 0 4px; }
 
-  /* Feature cards */
-  .hp-feature-card { padding: 18px 14px; }
-  .hp-section-heading { font-size: 1.6rem; }
-  .hp-section-sub { font-size: 0.88rem; }
-
-  /* Service cards */
-  .hp-svc-card { padding: 20px 14px; }
-  .hp-svc-title { font-size: 1rem; }
-  .hp-svc-heading { font-size: 1.6rem; }
+  /* Features */
+  .hp-section-heading { font-size: 1.5rem; }
+  .hp-section-sub     { font-size: 0.85rem; }
+  .hp-feature-card { padding: 14px 12px; gap: 12px; }
+  .hp-feature-icon-wrap { width: 38px; height: 38px; min-width: 38px; }
 
   /* About */
   .hp-about-heading { font-size: 1.4rem; }
-  .hp-about-stat-val { font-size: 1.5rem; }
-  .hp-about-card { padding: 14px 12px; border-radius: 14px; }
+  .hp-about-stat-val { font-size: 1.3rem; }
+
+  /* Services */
+  .hp-svc-heading { font-size: 1.5rem; }
+  .hp-svc-card { padding: 18px 14px; }
+  .hp-svc-title { font-size: 0.95rem; }
+  .hp-svc-desc  { font-size: 0.79rem; }
 
   /* Contact */
-  .hp-contact-card { padding: 16px 14px; }
-  .hp-contact-value { font-size: 0.88rem; }
+  .hp-contact-card { padding: 14px 12px; }
+  .hp-contact-value { font-size: 0.84rem; }
 
   /* CTA */
-  .hp-cta-title { font-size: 1.5rem; }
-  .hp-cta-desc  { font-size: 0.88rem; }
+  .hp-cta-title { font-size: 1.45rem; }
+  .hp-cta-desc  { font-size: 0.84rem; }
 
   /* Footer */
-  .hp-footer-logo { font-size: 1.2rem; }
-  .hp-footer-tagline { font-size: 0.78rem; }
+  .hp-footer-logo { font-size: 1.1rem; }
+  .hp-footer-tagline { font-size: 0.75rem; }
+  .hp-footer-copy { font-size: 0.72rem; }
+  .hp-footer-made { font-size: 0.7rem; }
 }
+
