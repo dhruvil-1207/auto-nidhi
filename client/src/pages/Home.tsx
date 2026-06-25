@@ -241,9 +241,11 @@ export default function Home() {
             ].map((f) => (
               <div className="hp-feature-card" key={f.title}>
                 <div className="hp-feature-icon-wrap" style={{ background: f.bg }}>{f.icon}</div>
-                <h3>{f.title}</h3>
-                <p>{f.desc}</p>
-                <span className="hp-feature-chip" style={f.chipStyle}>{f.chip}</span>
+                <div className="hp-feature-card-body">
+                  <h3>{f.title}</h3>
+                  <p>{f.desc}</p>
+                  <span className="hp-feature-chip" style={f.chipStyle}>{f.chip}</span>
+                </div>
               </div>
             ))}
           </div>
