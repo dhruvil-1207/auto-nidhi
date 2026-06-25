@@ -529,49 +529,254 @@
 .hp-footer-copy { font-size: 0.8rem; color: rgba(255,255,255,.3); }
 .hp-footer-made { font-size: 0.78rem; color: rgba(255,255,255,.25); }
 
-/* ─────────────────────────────────────────────
-   RESPONSIVE
-───────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE — 6-TIER BREAKPOINT SYSTEM
+   Mobile-first corrections applied additively from desktop base.
+   Zero changes to functionality, routing, or animations.
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Tier 1: ≤ 1280px — Large tablet / small laptop ── */
+@media (max-width: 1280px) {
+  .hp-container { padding: 0 24px; }
+  .hp-section-features,
+  .hp-section-about,
+  .hp-section-services,
+  .hp-section-contact,
+  .hp-section-cta { padding: 90px 0; }
+  .hp-svc-card { padding: 36px 28px; }
+}
+
+/* ── Tier 2: ≤ 1024px — Tablet landscape ── */
 @media (max-width: 1024px) {
-  .hp-features-grid { grid-template-columns: repeat(2, 1fr); }
-  .hp-svc-grid       { grid-template-columns: repeat(2, 1fr); }
+  /* Grids: 3 → 2 columns */
+  .hp-features-grid { grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  .hp-svc-grid      { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+  /* Padding reduction */
+  .hp-section-features,
+  .hp-section-about,
+  .hp-section-services,
+  .hp-section-contact,
+  .hp-section-cta { padding: 80px 0; }
+
+  /* About layout narrower gap */
+  .hp-about-layout { gap: 56px; }
+
+  /* Service card */
+  .hp-svc-card { padding: 32px 24px; }
+  .hp-svc-icon-wrap { width: 56px; height: 56px; font-size: 1.5rem; }
 }
 
+/* ── Tier 3: ≤ 900px — Tablet portrait / large phone ── */
 @media (max-width: 900px) {
-  .hp-hero .hp-container { grid-template-columns: 1fr; gap: 40px; min-height: auto; padding-top: 40px; }
-  .hp-hero-visual { display: none; }
-  .hp-hero-title { font-size: clamp(2.2rem, 6vw, 2.8rem); }
-  .hp-about-layout { grid-template-columns: 1fr; gap: 40px; }
-  .hp-navbar-links { display: none; }
+  /* Container */
+  .hp-container { padding: 0 20px; }
+
+  /* Navbar: show hamburger, hide desktop links + actions */
+  .hp-navbar-links   { display: none; }
   .hp-navbar-actions { display: none; }
-  .hp-hamburger { display: flex; }
-  .hp-hero-stat { padding: 0 20px; }
+  .hp-hamburger      { display: flex; }
+  .hp-navbar-logo-img { height: 44px; }
+
+  /* Hero: single column, hide visual panel */
+  .hp-hero .hp-container {
+    grid-template-columns: 1fr;
+    gap: 0;
+    min-height: auto;
+    padding-top: 36px;
+    padding-bottom: 52px;
+  }
+  .hp-hero-visual { display: none; }
+  .hp-hero-content { text-align: center; }
+  .hp-hero-badge  { justify-content: center; }
+  .hp-hero-actions { justify-content: center; }
+  .hp-hero-stats  { justify-content: center; }
+  .hp-hero-desc   { max-width: 100%; }
+  .hp-hero-title  { font-size: clamp(2.2rem, 5.5vw, 2.8rem); }
+  .hp-hero-stat   { padding: 0 24px; }
   .hp-hero-stat:first-child { padding-left: 0; }
-}
 
-@media (max-width: 768px) {
-  .hp-features-grid { grid-template-columns: 1fr; }
-  .hp-svc-grid       { grid-template-columns: 1fr; }
-  .hp-contact-grid   { grid-template-columns: 1fr; gap: 14px; }
-  .hp-footer-links-section { gap: 30px; }
-  .hp-trust-inner { gap: 24px; }
-  .hp-section-features, .hp-section-about,
-  .hp-section-services, .hp-section-contact,
+  /* About: single column */
+  .hp-about-layout { grid-template-columns: 1fr; gap: 32px; }
+
+  /* Section padding */
+  .hp-section-features,
+  .hp-section-about,
+  .hp-section-services,
+  .hp-section-contact,
   .hp-section-cta { padding: 72px 0; }
+
+  /* Services grid: still 2-col on 900px tablet */
+  .hp-svc-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* ── Tier 4: ≤ 768px — Mobile landscape / large phone ── */
+@media (max-width: 768px) {
+  /* Container */
+  .hp-container { padding: 0 16px; }
+
+  /* Grids: all collapse to 1 column */
+  .hp-features-grid { grid-template-columns: 1fr; gap: 14px; }
+  .hp-svc-grid      { grid-template-columns: 1fr; gap: 16px; }
+  .hp-contact-grid  { grid-template-columns: 1fr; gap: 12px; }
+
+  /* Section padding */
+  .hp-section-features,
+  .hp-section-about,
+  .hp-section-services,
+  .hp-section-contact,
+  .hp-section-cta { padding: 60px 0; }
+
+  /* Hero */
+  .hp-hero .hp-container { padding-top: 28px; padding-bottom: 44px; }
+  .hp-hero-title { font-size: clamp(2rem, 6vw, 2.4rem); }
+  .hp-hero-actions { gap: 10px; margin-bottom: 36px; }
+
+  /* Trust strip */
+  .hp-trust-inner { gap: 16px 32px; padding: 0 8px; }
+  .hp-trust-strip { padding: 18px 0; }
+
+  /* Feature cards */
+  .hp-feature-card { padding: 24px 20px; }
+
+  /* Service cards */
+  .hp-svc-card { padding: 28px 20px; }
+  .hp-svc-icon-wrap { width: 52px; height: 52px; font-size: 1.4rem; margin-bottom: 18px; }
+  .hp-svc-title { font-size: 1.1rem; }
+
+  /* Contact cards */
+  .hp-contact-card { padding: 24px 20px; }
+  .hp-contact-icon { font-size: 1.6rem; }
+
+  /* About */
+  .hp-about-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .hp-about-card { padding: 20px 22px; }
+
+  /* Footer */
+  .hp-footer-top { flex-direction: column; gap: 28px; }
+  .hp-footer-brand { max-width: 100%; }
+  .hp-footer-links-section { gap: 32px; }
+
+  /* CTA */
+  .hp-cta-desc { max-width: 100%; }
+}
+
+/* ── Tier 5: ≤ 480px — Standard small mobile ── */
 @media (max-width: 480px) {
-  .hp-hero-stats { flex-direction: column; gap: 16px; }
-  .hp-hero-stat  { padding: 0; border-right: none; }
-  .hp-hero-badge { font-size: 0.72rem; }
-  .hp-hero-title { font-size: 2rem; }
-  .hp-hero-desc  { font-size: 0.95rem; }
-  .hp-hero-actions { flex-direction: column; }
+  /* Container */
+  .hp-container { padding: 0 14px; }
+
+  /* Section padding */
+  .hp-section-features,
+  .hp-section-about,
+  .hp-section-services,
+  .hp-section-contact,
+  .hp-section-cta { padding: 52px 0; }
+
+  /* Navbar */
+  .hp-navbar-logo-img { height: 40px; }
+
+  /* Hero */
+  .hp-hero .hp-container { padding-top: 24px; padding-bottom: 36px; }
+  .hp-hero-badge { font-size: 0.7rem; padding: 5px 12px; white-space: normal; text-align: center; }
+  .hp-hero-title { font-size: 1.85rem; letter-spacing: -0.3px; }
+  .hp-hero-desc  { font-size: 0.93rem; margin-bottom: 28px; }
+  .hp-hero-actions { flex-direction: column; margin-bottom: 32px; }
   .hp-hero-actions .hp-btn { width: 100%; justify-content: center; }
-  .hp-cta-actions { flex-direction: column; align-items: center; }
-  .hp-cta-actions .hp-btn { width: 100%; max-width: 320px; justify-content: center; }
-  .hp-footer-top   { flex-direction: column; }
-  .hp-footer-bottom { flex-direction: column; text-align: center; }
-  .hp-footer-links-section { flex-direction: column; gap: 20px; }
-  .hp-about-stats { flex-direction: column; gap: 16px; }
+  .hp-hero-stats  { flex-direction: column; gap: 14px; }
+  .hp-hero-stat   { padding: 0; border-right: none; border-bottom: 1px solid rgba(255,255,255,.08); padding-bottom: 14px; }
+  .hp-hero-stat:last-child { border-bottom: none; padding-bottom: 0; }
+
+  /* Trust strip: 2-column grid */
+  .hp-trust-inner {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 0;
+  }
+  .hp-trust-item { justify-content: flex-start; font-size: 0.78rem; }
+
+  /* Feature cards */
+  .hp-feature-card { padding: 20px 16px; border-radius: 16px; }
+  .hp-feature-icon-wrap { width: 48px; height: 48px; font-size: 1.3rem; margin-bottom: 16px; }
+  .hp-feature-chip { font-size: 0.68rem; padding: 3px 10px; }
+
+  /* Service cards */
+  .hp-svc-card { padding: 24px 18px; border-radius: 18px; }
+  .hp-svc-icon-wrap { width: 46px; height: 46px; font-size: 1.3rem; margin-bottom: 16px; }
+  .hp-svc-title { font-size: 1.05rem; }
+  .hp-svc-desc  { font-size: 0.85rem; }
+  .hp-svc-list  { gap: 7px; }
+  .hp-svc-list li { font-size: 0.82rem; }
+
+  /* Contact */
+  .hp-contact-card { padding: 20px 16px; border-radius: 16px; }
+  .hp-contact-icon { font-size: 1.5rem; margin-bottom: 10px; }
+  .hp-contact-value { font-size: 0.92rem; word-break: break-word; }
+
+  /* About */
+  .hp-about-stats { grid-template-columns: 1fr; gap: 12px; }
+  .hp-about-stat-val { font-size: 1.7rem; }
+  .hp-about-heading { font-size: 1.6rem; }
+  .hp-about-card { padding: 18px 16px; gap: 14px; }
+  .hp-about-card-icon { width: 40px; height: 40px; font-size: 1.1rem; }
+
+  /* CTA */
+  .hp-section-cta { padding: 48px 0; }
+  .hp-cta-actions { flex-direction: column; align-items: stretch; }
+  .hp-cta-actions .hp-btn { width: 100%; justify-content: center; }
+
+  /* Footer */
+  .hp-footer { padding: 36px 0 24px; }
+  .hp-footer-links-section { flex-direction: column; gap: 16px; }
+  .hp-footer-bottom { flex-direction: column; text-align: center; gap: 8px; }
+}
+
+/* ── Tier 6: ≤ 360px — Very small mobile (budget Android / iPhone mini) ── */
+@media (max-width: 360px) {
+  /* Container */
+  .hp-container { padding: 0 12px; }
+
+  /* Navbar */
+  .hp-navbar { height: 62px; }
+  .hp-navbar-logo-img { height: 36px; }
+
+  /* Hero */
+  .hp-hero { padding-top: 62px; }
+  .hp-hero-title { font-size: 1.6rem; }
+  .hp-hero-badge { font-size: 0.66rem; padding: 4px 10px; }
+  .hp-hero-desc  { font-size: 0.88rem; }
+  .hp-stat-val   { font-size: 1.5rem; }
+  .hp-stat-lbl   { font-size: 0.7rem; }
+
+  /* Trust strip: keep 2-col but tighter */
+  .hp-trust-inner { gap: 10px; }
+  .hp-trust-item  { font-size: 0.73rem; gap: 6px; }
+
+  /* Feature cards */
+  .hp-feature-card { padding: 18px 14px; }
+  .hp-section-heading { font-size: 1.6rem; }
+  .hp-section-sub { font-size: 0.88rem; }
+
+  /* Service cards */
+  .hp-svc-card { padding: 20px 14px; }
+  .hp-svc-title { font-size: 1rem; }
+  .hp-svc-heading { font-size: 1.6rem; }
+
+  /* About */
+  .hp-about-heading { font-size: 1.4rem; }
+  .hp-about-stat-val { font-size: 1.5rem; }
+  .hp-about-card { padding: 14px 12px; border-radius: 14px; }
+
+  /* Contact */
+  .hp-contact-card { padding: 16px 14px; }
+  .hp-contact-value { font-size: 0.88rem; }
+
+  /* CTA */
+  .hp-cta-title { font-size: 1.5rem; }
+  .hp-cta-desc  { font-size: 0.88rem; }
+
+  /* Footer */
+  .hp-footer-logo { font-size: 1.2rem; }
+  .hp-footer-tagline { font-size: 0.78rem; }
 }
